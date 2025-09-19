@@ -1,0 +1,118 @@
+/* src/assets/styles/login.css */
+
+:root {
+  --login-bg: url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1935&auto=format&fit=crop');
+  --brand-green: #16a34a;
+  --brand-green-dark: #15803d;
+  --overlay: rgba(10, 25, 47, 0.70);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #0b1220; /* color de fondo por si tarda la imagen */
+}
+
+/* Contenedor de página del login; no depende de Bootstrap */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh; /* mejor en móviles */
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Fondo SIEMPRE a pantalla completa (independiente del layout) */
+.login-bg {
+  position: fixed;   /* 👈 clave para que cubra toda la pantalla */
+  inset: 0;
+  background:
+    linear-gradient(var(--overlay), var(--overlay)),
+    var(--login-bg) center / cover no-repeat;
+  z-index: 0;
+}
+
+/* Área de contenido centrada real */
+.login-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+/* Tarjeta (glassmorphism) */
+.login-card {
+  width: min(92vw, 420px);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 2rem;
+  color: #f8f9fa;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+.login-card .form-control {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff !important;
+  border-radius: 0.5rem;
+}
+
+.login-card .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.login-card .form-control:focus {
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 0.25rem rgba(22, 163, 74, 0.4);
+}
+
+.login-card .form-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.btn-brand {
+  background-color: var(--brand-green);
+  border-color: var(--brand-green);
+  font-weight: 600;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+  color: #fff;
+
+}
+
+.btn-brand:hover,
+.btn-brand:focus {
+  background-color: var(--brand-green-dark);
+  border-color: var(--brand-green-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+}
+
+.login-icon {
+  width: 64px;
+  height: 64px;
+  display: block;
+  margin: 0 auto 1.25rem;
+  color: #f8f9fa;
+}
+
+/* Pequeños ajustes en pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .login-card { padding: 1.25rem; }
+}
