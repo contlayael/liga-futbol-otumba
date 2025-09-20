@@ -1,11 +1,13 @@
 // src/admin/AdminFuerzas.tsx
 import { useEffect, useMemo, useState } from "react";
-import { Tabs, Tab } from "react-bootstrap";
+import { Tabs, Tab, Modal } from "react-bootstrap";
 import {
   addTeam,
   getTeamsByFuerza,
+  updateTeamBaseline,
   type Fuerza,
   type Team,
+  type BaselineStats,
 } from "../services/teams";
 import {
   addMatchesBulk,
@@ -32,13 +34,15 @@ const genId = () =>
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function AdminFuerzas() {
-  const [activeKey, setActiveKey] = useState<Fuerza>("2da"); // abre donde estabas
+  const [activeKey, setActiveKey] = useState<Fuerza>("1ra");
+
   const [equipos, setEquipos] = useState<Record<Fuerza, Team[]>>({
     "1ra": [],
     "2da": [],
     "3ra": [],
   });
 
+  // 🔧 FIX: nombre por pestaña (antes era un solo estado compartido)
   const [nuevoNombre, setNuevoNombre] = useState<Record<Fuerza, string>>({
     "1ra": "",
     "2da": "",
@@ -78,7 +82,75 @@ export default function AdminFuerzas() {
   const [info, setInfo] = useState<string>("");
   const [err, setErr] = useState<string>("");
 
-  // Cargar equipos
+  // ====== Baseline modal ======
+  const [showBaseline, setShowBaseline] = useState(false);
+  const [teamBL, setTeamBL] = useState<Team | null>(null);
+  const [bRound, setBRound] = useState(6);
+  const [bPJ, setBPJ] = useState(0);
+  const [bG, setBG] = useState(0);
+  const [bE, setBE] = useState(0);
+  const [bP, setBP] = useState(0);
+  const [bGF, setBGF] = useState(0);
+  const [bGC, setBGC] = useState(0);
+  const bDG = bGF - bGC;
+  const bPts = bG * 3 + bE;
+
+  function openBaseline(t: Team) {
+    setTeamBL(t);
+    if (t.baseline) {
+      setBRound(t.baseline.upToRound);
+      setBPJ(t.baseline.PJ);
+      setBG(t.baseline.G);
+      setBE(t.baseline.E);
+      setBP(t.baseline.P);
+      setBGF(t.baseline.GF);
+      setBGC(t.baseline.GC);
+    } else {
+      setBRound(6);
+      setBPJ(0);
+      setBG(0);
+      setBE(0);
+      setBP(0);
+      setBGF(0);
+      setBGC(0);
+    }
+    setShowBaseline(true);
+  }
+
+  async function saveBaseline() {
+    if (!teamBL) return;
+    if (bPJ !== bG + bE + bP) {
+      setErr("La suma G + E + P debe ser igual a PJ.");
+      return;
+    }
+    setLoading(true);
+    setErr("");
+    setInfo("");
+    try {
+      await updateTeamBaseline(teamBL.id, {
+        upToRound: bRound,
+        PJ: bPJ,
+        G: bG,
+        E: bE,
+        P: bP,
+        GF: bGF,
+        GC: bGC,
+      });
+      // recargar equipos de la fuerza activa para reflejar baseline
+      const data = await getTeamsByFuerza(teamBL.fuerza);
+      setEquipos((prev) => ({ ...prev, [teamBL.fuerza]: data }));
+      setInfo(`Baseline guardada para ${teamBL.nombre}.`);
+      setShowBaseline(false);
+    } catch (e) {
+      console.error(e);
+      setErr("No se pudo guardar la baseline.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  // ====== /Baseline modal ======
+
+  // Cargar equipos de la fuerza activa
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -96,7 +168,7 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey]);
 
-  // Cargar partidos programados
+  // Cargar partidos programados por fecha/fuerza
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -211,7 +283,6 @@ export default function AdminFuerzas() {
     setInfo("");
     try {
       await addMatchesBulk(toSave);
-      // limpiar y recargar
       setRows((prev) => ({
         ...prev,
         [fuerza]: [
@@ -272,7 +343,7 @@ export default function AdminFuerzas() {
                         [fuerza]: e.target.value,
                       }))
                     }
-                    placeholder="Ej. Deportivo Otumba"
+                    placeholder="Ej. Estudiantes"
                   />
                 </div>
                 <div className="col-auto">
@@ -285,15 +356,34 @@ export default function AdminFuerzas() {
                   </button>
                 </div>
               </div>
+
               <div className="mt-3">
                 <strong>Equipos en {fuerza}:</strong>
                 <div className="mt-2">
                   {equipos[fuerza].length === 0 ? (
                     <span className="text-muted">No hay equipos aún.</span>
                   ) : (
-                    <ul className="mb-0">
+                    <ul className="mb-0 list-unstyled">
                       {equipos[fuerza].map((t) => (
-                        <li key={t.id}>{t.nombre}</li>
+                        <li
+                          key={t.id}
+                          className="d-flex justify-content-between align-items-center py-1"
+                        >
+                          <span>
+                            {t.nombre}{" "}
+                            {t.baseline && (
+                              <span className="badge bg-success ms-2">
+                                BL J{t.baseline.upToRound}
+                              </span>
+                            )}
+                          </span>
+                          <button
+                            className="btn btn-outline-light btn-sm"
+                            onClick={() => openBaseline(t)}
+                          >
+                            Baseline
+                          </button>
+                        </li>
                       ))}
                     </ul>
                   )}
@@ -317,7 +407,7 @@ export default function AdminFuerzas() {
                       }))
                     }
                   />
-                  <small className="text-muted">Ej: 2025-09-21 (domingo)</small>
+                  <small className="text-white">Ej: 2025-09-21 (domingo)</small>
                 </div>
                 <div className="col-sm-4 col-md-2">
                   <label className="form-label">Jornada</label>
@@ -476,6 +566,126 @@ export default function AdminFuerzas() {
           </Tab>
         ))}
       </Tabs>
+
+      {/* Baseline Modal */}
+      <Modal show={showBaseline} onHide={() => setShowBaseline(false)} centered>
+        <div className="modal-content p-2">
+          <div className="modal-header">
+            <h5 className="modal-title">
+              Baseline · {teamBL?.nombre} ({teamBL?.fuerza} fuerza)
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowBaseline(false)}
+            />
+          </div>
+          <div className="modal-body">
+            <div className="row g-2">
+              <div className="col-6 col-md-3">
+                <label className="form-label">Jornada incluida</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bRound}
+                  min={0}
+                  onChange={(e) =>
+                    setBRound(parseInt(e.target.value || "0", 10))
+                  }
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">PJ</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bPJ}
+                  min={0}
+                  onChange={(e) => setBPJ(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">G</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bG}
+                  min={0}
+                  onChange={(e) => setBG(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">E</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bE}
+                  min={0}
+                  onChange={(e) => setBE(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">P</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bP}
+                  min={0}
+                  onChange={(e) => setBP(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">GF</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bGF}
+                  min={0}
+                  onChange={(e) => setBGF(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">GC</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bGC}
+                  min={0}
+                  onChange={(e) => setBGC(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">DG</label>
+                <input className="form-control" value={bDG} disabled />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">Pts</label>
+                <input className="form-control" value={bPts} disabled />
+              </div>
+            </div>
+            <small className="text-muted d-block mt-2">
+              La baseline aplica hasta la jornada indicada. Desde la siguiente
+              jornada, las estadísticas se suman automáticamente con los
+              partidos finalizados.
+            </small>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowBaseline(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-success"
+              onClick={saveBaseline}
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

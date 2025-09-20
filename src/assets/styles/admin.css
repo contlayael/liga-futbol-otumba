@@ -80,3 +80,12 @@
   border-color: #334155 !important;
   color: #e5e7eb !important;
 }
+/* Modal oscuro */
+.admin-dark .modal-content {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #e5e7eb !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.admin-dark .btn-close {
+  filter: invert(1);
+}

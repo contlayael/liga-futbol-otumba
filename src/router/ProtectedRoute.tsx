@@ -11,7 +11,7 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
   const { user, role, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return <p className="text-white">Cargando...</p>;
 
   if (!user) {
     // No autenticado → manda al login y recuerda ruta anterior
