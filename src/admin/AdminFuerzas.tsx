@@ -7,7 +7,6 @@ import {
   updateTeamBaseline,
   type Fuerza,
   type Team,
-  type BaselineStats,
 } from "../services/teams";
 import {
   addMatchesBulk,
