@@ -11,7 +11,6 @@ import ProtectedRoute from "./router/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
-// 👈 el layout que hicimos
 
 function App() {
   return (
@@ -25,11 +24,26 @@ function App() {
           <Route path="/avisos" element={<Avisos />} />
           <Route path="/patrocinadores" element={<Patrocinadores />} />
 
-          {/* Login y Dashboards */}
+          {/* Login */}
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<ProtectedRoute />} />
-          <Route path="/admin" element={<DashboardAdmin />} />
-          <Route path="/arbitro" element={<DashboardArbitro />} />
+
+          {/* Rutas protegidas por rol */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <DashboardAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/arbitro"
+            element={
+              <ProtectedRoute allowedRoles={["arbitro"]}>
+                <DashboardArbitro />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
         <Footer />
       </BrowserRouter>

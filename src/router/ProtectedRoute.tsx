@@ -1,16 +1,28 @@
 // src/router/ProtectedRoute.tsx
-
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute() {
+interface ProtectedRouteProps {
+  allowedRoles: Array<"admin" | "arbitro">;
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   const { user, role, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) return <p>Cargando...</p>;
-  if (!user) return <Navigate to="/login" />;
 
-  if (role === "admin") return <Navigate to="/admin" />;
-  if (role === "arbitro") return <Navigate to="/arbitro" />;
+  if (!user) {
+    // No autenticado → manda al login y recuerda ruta anterior
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
-  return <p>Rol no autorizado</p>;
+  if (!role || !allowedRoles.includes(role as "admin" | "arbitro")) {
+    // Autenticado pero no autorizado → home
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }
+// Si está autenticado y autorizado, renderiza el componente

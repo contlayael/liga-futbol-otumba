@@ -116,3 +116,46 @@ html, body, #root {
 @media (max-width: 360px) {
   .login-card { padding: 1.25rem; }
 }
+
+
+/* Barra mínima para salir del login */
+.login-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3; /* por encima del fondo y la tarjeta */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1rem;
+  background: linear-gradient(to bottom, rgba(15,23,42,.65), rgba(15,23,42,0));
+}
+
+/* Botón fantasma claro (compatible con el fondo del login) */
+.btn-ghost-light {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border-radius: .5rem;
+  padding: .4rem .75rem;
+  font-weight: 600;
+  transition: all .15s ease;
+}
+.btn-ghost-light:hover,
+.btn-ghost-light:focus {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.55);
+}
+
+/* Enlace ligero bajo la tarjeta */
+.btn-link-light {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.9);
+  text-decoration: underline;
+  font-weight: 600;
+  padding: .25rem .5rem;
+}
+.btn-link-light:hover { color: #fff; }
