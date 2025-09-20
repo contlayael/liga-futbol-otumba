@@ -1,0 +1,82 @@
+/* src/assets/styles/admin.css */
+
+/* Fondo general oscuro dentro del panel admin */
+.admin-dark {
+  background-color: #0b1220;
+  color: #e5e7eb;
+  min-height: 100%;
+}
+
+/* Tabs (barra) */
+.admin-dark .nav-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.admin-dark .nav-tabs .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  border: none !important;
+}
+.admin-dark .nav-tabs .nav-link.active {
+  color: #16a34a !important;
+  border: none !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+/* Contenido de pestañas */
+.admin-dark .tab-content,
+.admin-dark .tab-pane {
+  background: transparent !important;
+  color: #e5e7eb !important;
+}
+
+/* Cards oscuras (forzar sobre Bootstrap) */
+.admin-dark .card {
+  background: rgba(15, 23, 42, 0.9) !important; /* oscuro */
+  color: #e5e7eb !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+}
+
+/* Inputs/Selects */
+.admin-dark .card .form-control,
+.admin-dark .card .form-select {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+}
+.admin-dark .card .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.admin-dark .card .form-control:focus,
+.admin-dark .card .form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(22, 163, 74, 0.25) !important;
+  border-color: #16a34a !important;
+}
+
+/* Tabla oscura */
+.admin-dark .table {
+  color: #e5e7eb !important;
+}
+.admin-dark .table thead {
+  background-color: #0f172a !important;
+  color: #e5e7eb !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+.admin-dark .table-striped > tbody > tr:nth-of-type(odd) {
+  --bs-table-accent-bg: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Botones acorde a la marca */
+.admin-dark .btn-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+.admin-dark .btn-outline-danger {
+  color: #fca5a5 !important;
+  border-color: #fca5a5 !important;
+}
+.admin-dark .btn-secondary {
+  background-color: #334155 !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}

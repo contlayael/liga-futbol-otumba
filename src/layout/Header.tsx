@@ -31,6 +31,11 @@ export default function Header() {
               </NavLink>
             </li>
             <li className="nav-item">
+              <NavLink to="/rol-juego" className="nav-link text-white">
+                Rol de juego
+              </NavLink>
+            </li>
+            <li className="nav-item">
               <NavLink to="/goleo" className="nav-link text-white">
                 Tabla de Goleo
               </NavLink>

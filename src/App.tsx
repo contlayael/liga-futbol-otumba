@@ -1,6 +1,7 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TablaGeneral from "./pages/TablaGeneral";
+import RolDeJuego from "./pages/RolDeJuego";
 import TablaGoleo from "./pages/TablaGoleo";
 import Avisos from "./pages/Avisos";
 import Patrocinadores from "./pages/Patrocinadores";
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           {/* Público */}
           <Route path="/" element={<TablaGeneral />} />
+          <Route path="/rol-juego" element={<RolDeJuego />} />
           <Route path="/goleo" element={<TablaGoleo />} />
           <Route path="/avisos" element={<Avisos />} />
           <Route path="/patrocinadores" element={<Patrocinadores />} />
