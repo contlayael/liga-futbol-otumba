@@ -439,9 +439,9 @@ export default function AdminFuerzas() {
                         updateRow(fuerza, r.id, { homeTeamId: e.target.value })
                       }
                     >
-                      <option value="">Selecciona equipo</option>
+                      <option className="text-black" value="">Selecciona equipo</option>
                       {equipos[fuerza].map((t) => (
-                        <option value={t.id} key={t.id}>
+                        <option value={t.id} key={t.id} className="text-black">
                           {t.nombre}
                         </option>
                       ))}
@@ -450,15 +450,15 @@ export default function AdminFuerzas() {
                   <div className="col-lg-3">
                     <label className="form-label">Visitante</label>
                     <select
-                      className="form-select"
+                      className="form-select text-black" 
                       value={r.awayTeamId}
                       onChange={(e) =>
                         updateRow(fuerza, r.id, { awayTeamId: e.target.value })
                       }
                     >
-                      <option value="">Selecciona equipo</option>
+                      <option className="text-black" value="">Selecciona equipo</option>
                       {equipos[fuerza].map((t) => (
-                        <option value={t.id} key={t.id}>
+                        <option value={t.id} key={t.id} className="text-black">
                           {t.nombre}
                         </option>
                       ))}
