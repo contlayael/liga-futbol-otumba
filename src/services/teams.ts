@@ -1,5 +1,5 @@
 // src/services/teams.ts
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 export type Fuerza = "1ra" | "2da" | "3ra";
@@ -52,4 +52,14 @@ export async function updateTeamBaseline(teamId: string, baseline: Omit<Baseline
   };
   const teamRef = doc(db, "teams", teamId);
   await setDoc(teamRef, { baseline: normalized }, { merge: true });
+}
+
+export async function deleteTeam(teamId: string) {
+  const docRef = doc(db, "teams", teamId);
+  await deleteDoc(docRef);
+}
+
+export async function updateTeamName(teamId: string, newName: string) {
+  const docRef = doc(db, "teams", teamId);
+  await updateDoc(docRef, { nombre: newName });
 }

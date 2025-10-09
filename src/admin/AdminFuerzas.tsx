@@ -3,8 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Tabs, Tab, Modal } from "react-bootstrap";
 import {
   addTeam,
+  deleteTeam,
   getTeamsByFuerza,
   updateTeamBaseline,
+  updateTeamName,
   type Fuerza,
   type Team,
 } from "../services/teams";
@@ -93,6 +95,58 @@ export default function AdminFuerzas() {
   const [bGC, setBGC] = useState(0);
   const bDG = bGF - bGC;
   const bPts = bG * 3 + bE;
+
+  // Eliminación y edición de equipos (no en modal)
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [editedName, setEditedName] = useState("");
+
+  function openEditModal(team: Team) {
+    setTeamToEdit(team);
+    setEditedName(team.nombre);
+    setShowEdit(true);
+  }
+
+  function openDeleteModal(team: Team) {
+    setTeamToDelete(team);
+    setShowDelete(true);
+  }
+
+  async function handleEdit() {
+    if (!teamToEdit || !editedName.trim()) return;
+    setLoading(true);
+    try {
+      await updateTeamName(teamToEdit.id, editedName.trim());
+      const data = await getTeamsByFuerza(teamToEdit.fuerza);
+      setEquipos((prev) => ({ ...prev, [teamToEdit.fuerza]: data }));
+      setInfo("Nombre actualizado.");
+      setShowEdit(false);
+    } catch (e) {
+      console.error(e);
+      setErr("No se pudo actualizar el equipo.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!teamToDelete) return;
+    setLoading(true);
+    try {
+      await deleteTeam(teamToDelete.id);
+      const data = await getTeamsByFuerza(teamToDelete.fuerza);
+      setEquipos((prev) => ({ ...prev, [teamToDelete.fuerza]: data }));
+      setInfo("Equipo eliminado.");
+      setShowDelete(false);
+    } catch (e) {
+      console.error(e);
+      setErr("No se pudo eliminar el equipo.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function openBaseline(t: Team) {
     setTeamBL(t);
@@ -376,12 +430,26 @@ export default function AdminFuerzas() {
                               </span>
                             )}
                           </span>
-                          <button
-                            className="btn btn-outline-light btn-sm"
-                            onClick={() => openBaseline(t)}
-                          >
-                            Baseline
-                          </button>
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn btn-outline-info btn-sm"
+                              onClick={() => openEditModal(t)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => openDeleteModal(t)}
+                            >
+                              Eliminar
+                            </button>
+                            <button
+                              className="btn btn-outline-light btn-sm"
+                              onClick={() => openBaseline(t)}
+                            >
+                              Baseline
+                            </button>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -439,7 +507,9 @@ export default function AdminFuerzas() {
                         updateRow(fuerza, r.id, { homeTeamId: e.target.value })
                       }
                     >
-                      <option className="text-black" value="">Selecciona equipo</option>
+                      <option className="text-black" value="">
+                        Selecciona equipo
+                      </option>
                       {equipos[fuerza].map((t) => (
                         <option value={t.id} key={t.id} className="text-black">
                           {t.nombre}
@@ -450,13 +520,15 @@ export default function AdminFuerzas() {
                   <div className="col-lg-3">
                     <label className="form-label">Visitante</label>
                     <select
-                      className="form-select text-black" 
+                      className="form-select text-black"
                       value={r.awayTeamId}
                       onChange={(e) =>
                         updateRow(fuerza, r.id, { awayTeamId: e.target.value })
                       }
                     >
-                      <option className="text-black" value="">Selecciona equipo</option>
+                      <option className="text-black" value="">
+                        Selecciona equipo
+                      </option>
                       {equipos[fuerza].map((t) => (
                         <option value={t.id} key={t.id} className="text-black">
                           {t.nombre}
@@ -681,6 +753,69 @@ export default function AdminFuerzas() {
               disabled={loading}
             >
               {loading ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal editar */}
+      <Modal show={showEdit} onHide={() => setShowEdit(false)} centered>
+        <div className="modal-content p-3">
+          <div className="modal-header">
+            <h5 className="modal-title">Editar nombre de equipo</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowEdit(false)}
+            />
+          </div>
+          <div className="modal-body">
+            <input
+              className="form-control"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              placeholder="Nuevo nombre"
+            />
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowEdit(false)}
+            >
+              Cancelar
+            </button>
+            <button className="btn btn-primary" onClick={handleEdit}>
+              Guardar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal eliminar */}
+      <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
+        <div className="modal-content p-3">
+          <div className="modal-header">
+            <h5 className="modal-title text-danger">¿Eliminar equipo?</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowDelete(false)}
+            />
+          </div>
+          <div className="modal-body">
+            ¿Estás seguro que deseas eliminar el equipo{" "}
+            <strong>{teamToDelete?.nombre}</strong>? Esta acción no se puede
+            deshacer.
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowDelete(false)}
+            >
+              Cancelar
+            </button>
+            <button className="btn btn-danger" onClick={handleDelete}>
+              Eliminar
             </button>
           </div>
         </div>
