@@ -20,11 +20,26 @@ export default function Header() {
   };
 
   return (
-    <header className="header-navbar">
-      <div className="container d-flex justify-content-between align-items-center py-3">
-        <h1 className="h4 mb-0 text-white">Liga de Fútbol Otumba</h1>
-        <nav className="d-flex gap-4 align-items-center">
-          <ul className="nav gap-3 mb-0">
+    <header className="header-navbar bg-dark text-white py-3">
+      <div className="container d-flex flex-wrap justify-content-between align-items-center">
+        {/* Logo y título */}
+        <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
+          <img
+            src="/images/TorneoLiga.png"
+            alt="Logo Torneo de Liga"
+            style={{ width: "50px", height: "50px", objectFit: "contain" }}
+          />
+          <h1 className="h5 mb-0">Liga de Fútbol Otumba</h1>
+          {user && (
+            <span className="badge bg-secondary ms-2">
+              {role === "admin" ? "Administrador" : "Árbitro"}
+            </span>
+          )}
+        </div>
+
+        {/* Navegación */}
+        <nav className="d-flex flex-wrap align-items-center gap-3">
+          <ul className="nav gap-2 mb-0">
             <li className="nav-item">
               <NavLink to="/" className="nav-link text-white">
                 Tabla General
@@ -52,20 +67,22 @@ export default function Header() {
             </li>
           </ul>
 
-          <button
-            className="btn btn-outline-light btn-sm"
-            onClick={handleAccessClick}
-          >
-            {user ? "Ir al Panel" : "Iniciar Sesión"}
-          </button>
-          {user && (
+          <div className="d-flex gap-2">
             <button
-              className="btn btn-light btn-sm ms-2"
-              onClick={() => signOut(auth)}
+              className="btn btn-outline-light btn-sm"
+              onClick={handleAccessClick}
             >
-              Cerrar sesión
+              {user ? "Ir al Panel" : "Iniciar Sesión"}
             </button>
-          )}
+            {user && (
+              <button
+                className="btn btn-light btn-sm"
+                onClick={() => signOut(auth)}
+              >
+                Cerrar sesión
+              </button>
+            )}
+          </div>
         </nav>
       </div>
     </header>
