@@ -12,6 +12,8 @@ import ProtectedRoute from "./router/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
+import Registros from "./pages/Registros";
+import PlantelEquipo from "./pages/PlantelEquipo";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           <Route path="/goleo" element={<TablaGoleo />} />
           <Route path="/avisos" element={<Avisos />} />
           <Route path="/patrocinadores" element={<Patrocinadores />} />
+          <Route path="/registros" element={<Registros />} />
+          <Route path="/registros/:teamId" element={<PlantelEquipo />} />
 
           {/* Login */}
           <Route path="/login" element={<Login />} />

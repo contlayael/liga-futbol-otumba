@@ -45,6 +45,13 @@ export default function Header() {
                 Tabla General
               </NavLink>
             </li>
+            {/* ▼▼▼ NUEVO ENLACE AÑADIDO ▼▼▼ */}
+            <li className="nav-item">
+              <NavLink to="/registros" className="nav-link text-white">
+                Registros
+              </NavLink>
+            </li>
+            {/* ▲▲▲ FIN DE NUEVO ENLACE ▲▲▲ */}
             <li className="nav-item">
               <NavLink to="/rol-juego" className="nav-link text-white">
                 Rol de juego

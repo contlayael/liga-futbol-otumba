@@ -1,4 +1,3 @@
-// src/admin/AdminFuerzas.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Tabs, Tab, Modal } from "react-bootstrap";
 import {
@@ -16,6 +15,9 @@ import {
   listMatchesByDateAndFuerza,
   type Match,
 } from "../services/matches";
+
+// ▼▼▼ AÑADIR IMPORTACIONES DE JUGADORES ▼▼▼
+import { addPlayer, uploadPlayerPhoto } from "../services/players";
 
 type Row = {
   id: string;
@@ -43,7 +45,6 @@ export default function AdminFuerzas() {
     "3ra": [],
   });
 
-  // 🔧 FIX: nombre por pestaña (antes era un solo estado compartido)
   const [nuevoNombre, setNuevoNombre] = useState<Record<Fuerza, string>>({
     "1ra": "",
     "2da": "",
@@ -83,7 +84,7 @@ export default function AdminFuerzas() {
   const [info, setInfo] = useState<string>("");
   const [err, setErr] = useState<string>("");
 
-  // ====== Baseline modal ======
+  // Estados Baseline modal (sin cambios)
   const [showBaseline, setShowBaseline] = useState(false);
   const [teamBL, setTeamBL] = useState<Team | null>(null);
   const [bRound, setBRound] = useState(6);
@@ -96,24 +97,33 @@ export default function AdminFuerzas() {
   const bDG = bGF - bGC;
   const bPts = bG * 3 + bE;
 
-  // Eliminación y edición de equipos (no en modal)
+  // Estados Editar/Eliminar Equipo (sin cambios)
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [editedName, setEditedName] = useState("");
 
+  // ▼▼▼ AÑADIR ESTADOS PARA EL NUEVO JUGADOR ▼▼▼
+  const [playerTeamId, setPlayerTeamId] = useState<Record<Fuerza, string>>({
+    "1ra": "",
+    "2da": "",
+    "3ra": "",
+  });
+  const [playerName, setPlayerName] = useState("");
+  const [playerAge, setPlayerAge] = useState("");
+  const [playerPhoto, setPlayerPhoto] = useState<File | null>(null);
+
+  // Funciones Editar/Eliminar Equipo (sin cambios)
   function openEditModal(team: Team) {
     setTeamToEdit(team);
     setEditedName(team.nombre);
     setShowEdit(true);
   }
-
   function openDeleteModal(team: Team) {
     setTeamToDelete(team);
     setShowDelete(true);
   }
-
   async function handleEdit() {
     if (!teamToEdit || !editedName.trim()) return;
     setLoading(true);
@@ -130,7 +140,6 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-
   async function handleDelete() {
     if (!teamToDelete) return;
     setLoading(true);
@@ -148,6 +157,7 @@ export default function AdminFuerzas() {
     }
   }
 
+  // Funciones Baseline (sin cambios)
   function openBaseline(t: Team) {
     setTeamBL(t);
     if (t.baseline) {
@@ -169,7 +179,6 @@ export default function AdminFuerzas() {
     }
     setShowBaseline(true);
   }
-
   async function saveBaseline() {
     if (!teamBL) return;
     if (bPJ !== bG + bE + bP) {
@@ -189,7 +198,6 @@ export default function AdminFuerzas() {
         GF: bGF,
         GC: bGC,
       });
-      // recargar equipos de la fuerza activa para reflejar baseline
       const data = await getTeamsByFuerza(teamBL.fuerza);
       setEquipos((prev) => ({ ...prev, [teamBL.fuerza]: data }));
       setInfo(`Baseline guardada para ${teamBL.nombre}.`);
@@ -201,9 +209,8 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-  // ====== /Baseline modal ======
 
-  // Cargar equipos de la fuerza activa
+  // UseEffect Cargar Equipos (sin cambios)
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -221,7 +228,7 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey]);
 
-  // Cargar partidos programados por fecha/fuerza
+  // UseEffect Cargar Partidos (sin cambios)
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -242,6 +249,7 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey, matchDate[activeKey]]);
 
+  // Memo nameById (sin cambios)
   const nameById = useMemo(() => {
     const m = new Map<string, string>();
     FUERZAS.forEach((f) => {
@@ -250,13 +258,13 @@ export default function AdminFuerzas() {
     return m;
   }, [equipos]);
 
+  // Funciones Agregar Equipo (sin cambios)
   async function handleAddTeam(fuerza: Fuerza) {
     const name = (nuevoNombre[fuerza] || "").trim();
     if (!name) {
       setErr("Escribe un nombre de equipo.");
       return;
     }
-
     setLoading(true);
     setErr("");
     setInfo("");
@@ -268,12 +276,13 @@ export default function AdminFuerzas() {
       setInfo("Equipo agregado correctamente.");
     } catch (e: any) {
       console.error("addTeam error:", e?.code || e);
-      setErr("No se pudo agregar el equipo. Revisa consola para más detalles.");
+      setErr("No se pudo agregar el equipo.");
     } finally {
       setLoading(false);
     }
   }
 
+  // Funciones Partidos (sin cambios)
   function addRow(fuerza: Fuerza) {
     setRows((prev) => ({
       ...prev,
@@ -295,13 +304,11 @@ export default function AdminFuerzas() {
       [fuerza]: prev[fuerza].map((r) => (r.id === id ? { ...r, ...patch } : r)),
     }));
   }
-
   async function saveSchedule(fuerza: Fuerza) {
     if (equipos[fuerza].length === 0) {
       setErr("Primero agrega equipos en esta fuerza.");
       return;
     }
-
     const date = matchDate[fuerza];
     const jornada = round[fuerza];
     const toSave = rows[fuerza]
@@ -323,14 +330,12 @@ export default function AdminFuerzas() {
           m.awayTeamId &&
           m.homeTeamId !== m.awayTeamId
       );
-
     if (toSave.length === 0) {
       setErr(
         "Agrega al menos un partido válido (equipos distintos, hora y cancha)."
       );
       return;
     }
-
     setLoading(true);
     setErr("");
     setInfo("");
@@ -352,7 +357,6 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-
   async function handleDeleteMatch(fuerza: Fuerza, matchId: string) {
     setLoading(true);
     setErr("");
@@ -369,6 +373,67 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
+
+  // ▼▼▼ AÑADIR NUEVA FUNCIÓN PARA MANEJAR EL REGISTRO DE JUGADOR ▼▼▼
+  async function handleRegisterPlayer(fuerza: Fuerza) {
+    const teamId = playerTeamId[fuerza];
+    const team = equipos[fuerza].find((t) => t.id === teamId);
+    const age = parseInt(playerAge, 10);
+
+    // --- Validación ---
+    if (!teamId || !team) {
+      setErr("Debes seleccionar un equipo válido.");
+      return;
+    }
+    if (!playerName.trim()) {
+      setErr("El nombre del jugador no puede estar vacío.");
+      return;
+    }
+    if (isNaN(age) || age <= 0) {
+      setErr("La edad debe ser un número válido.");
+      return;
+    }
+    if (!playerPhoto) {
+      setErr("Debes seleccionar una foto para el jugador.");
+      return;
+    }
+    // --- Fin Validación ---
+
+    setLoading(true);
+    setErr("");
+    setInfo("");
+    try {
+      // 1. Subir la foto primero
+      const { url, path } = await uploadPlayerPhoto(playerPhoto, teamId);
+      // 2. Crear el objeto NewPlayer
+      const newPlayer = {
+        nombre: playerName.trim(),
+        edad: age,
+        fuerza: fuerza,
+        teamId: team.id,
+        teamName: team.nombre,
+        photoURL: url,
+        storagePath: path,
+      };
+      // 3. Guardar en Firestore
+      await addPlayer(newPlayer);
+      setInfo(`¡Jugador ${playerName} registrado en ${team.nombre}!`);
+      // Limpiar formulario
+      setPlayerName("");
+      setPlayerAge("");
+      setPlayerPhoto(null);
+      const fileInput = document.getElementById(
+        `file-input-${fuerza}`
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (e) {
+      console.error(e);
+      setErr("No se pudo registrar al jugador. Revisa la consola.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  // ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲
 
   return (
     <>
@@ -409,7 +474,6 @@ export default function AdminFuerzas() {
                   </button>
                 </div>
               </div>
-
               <div className="mt-3">
                 <strong>Equipos en {fuerza}:</strong>
                 <div className="mt-2">
@@ -426,7 +490,8 @@ export default function AdminFuerzas() {
                             {t.nombre}{" "}
                             {t.baseline && (
                               <span className="badge bg-success ms-2">
-                                BL J{t.baseline.upToRound}
+                                {" "}
+                                BL J{t.baseline.upToRound}{" "}
                               </span>
                             )}
                           </span>
@@ -435,19 +500,22 @@ export default function AdminFuerzas() {
                               className="btn btn-outline-info btn-sm"
                               onClick={() => openEditModal(t)}
                             >
-                              Editar
+                              {" "}
+                              Editar{" "}
                             </button>
                             <button
                               className="btn btn-outline-danger btn-sm"
                               onClick={() => openDeleteModal(t)}
                             >
-                              Eliminar
+                              {" "}
+                              Eliminar{" "}
                             </button>
                             <button
                               className="btn btn-outline-light btn-sm"
                               onClick={() => openBaseline(t)}
                             >
-                              Baseline
+                              {" "}
+                              Baseline{" "}
                             </button>
                           </div>
                         </li>
@@ -459,7 +527,9 @@ export default function AdminFuerzas() {
             </div>
 
             {/* Rol de juego */}
-            <div className="card card-body">
+            <div className="card card-body mb-4">
+              {" "}
+              {/* <--- SE AÑADIÓ mb-4 AQUÍ */}
               <div className="row g-3">
                 <div className="col-sm-4 col-md-3">
                   <label className="form-label">Fecha</label>
@@ -492,9 +562,7 @@ export default function AdminFuerzas() {
                   />
                 </div>
               </div>
-
               <hr />
-
               <h6 className="mb-2">Agregar partidos</h6>
               {rows[fuerza].map((r) => (
                 <div className="row g-2 align-items-end mb-2" key={r.id}>
@@ -508,11 +576,13 @@ export default function AdminFuerzas() {
                       }
                     >
                       <option className="text-black" value="">
-                        Selecciona equipo
+                        {" "}
+                        Selecciona equipo{" "}
                       </option>
                       {equipos[fuerza].map((t) => (
                         <option value={t.id} key={t.id} className="text-black">
-                          {t.nombre}
+                          {" "}
+                          {t.nombre}{" "}
                         </option>
                       ))}
                     </select>
@@ -527,11 +597,13 @@ export default function AdminFuerzas() {
                       }
                     >
                       <option className="text-black" value="">
-                        Selecciona equipo
+                        {" "}
+                        Selecciona equipo{" "}
                       </option>
                       {equipos[fuerza].map((t) => (
                         <option value={t.id} key={t.id} className="text-black">
-                          {t.nombre}
+                          {" "}
+                          {t.nombre}{" "}
                         </option>
                       ))}
                     </select>
@@ -565,19 +637,20 @@ export default function AdminFuerzas() {
                       onClick={() => removeRow(fuerza, r.id)}
                       disabled={rows[fuerza].length === 1}
                     >
-                      Eliminar
+                      {" "}
+                      Eliminar{" "}
                     </button>
                   </div>
                 </div>
               ))}
-
               <div className="d-flex gap-2 mt-2">
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => addRow(fuerza)}
                 >
-                  + Agregar partido
+                  {" "}
+                  + Agregar partido{" "}
                 </button>
                 <button
                   type="button"
@@ -588,9 +661,7 @@ export default function AdminFuerzas() {
                   {loading ? "Guardando..." : "Guardar rol de juego"}
                 </button>
               </div>
-
               <hr />
-
               <h6 className="mb-2">Programados para {matchDate[fuerza]}</h6>
               <div className="table-responsive">
                 <table className="table table-sm table-striped align-middle">
@@ -608,7 +679,8 @@ export default function AdminFuerzas() {
                     {programados[fuerza].length === 0 ? (
                       <tr>
                         <td colSpan={6} className="text-center text-muted">
-                          Sin partidos programados.
+                          {" "}
+                          Sin partidos programados.{" "}
                         </td>
                       </tr>
                     ) : (
@@ -624,7 +696,8 @@ export default function AdminFuerzas() {
                               className="btn btn-outline-danger btn-sm"
                               onClick={() => handleDeleteMatch(fuerza, m.id)}
                             >
-                              Eliminar
+                              {" "}
+                              Eliminar{" "}
                             </button>
                           </td>
                         </tr>
@@ -634,6 +707,80 @@ export default function AdminFuerzas() {
                 </table>
               </div>
             </div>
+
+            {/* ▼▼▼ INICIO DE NUEVA SECCIÓN: REGISTRO DE JUGADORES ▼▼▼ */}
+            <div className="card card-body mb-4">
+              <h5 className="mb-3">Registrar Jugadores en {fuerza} Fuerza</h5>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label className="form-label">Equipo</label>
+                  <select
+                    className="form-select"
+                    value={playerTeamId[fuerza]}
+                    onChange={(e) =>
+                      setPlayerTeamId((prev) => ({
+                        ...prev,
+                        [fuerza]: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Selecciona un equipo</option>
+                    {equipos[fuerza].map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {" "}
+                        {t.nombre}{" "}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-5">
+                  <label className="form-label">Nombre del Jugador</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Ej. Juan Pérez"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">Edad</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Ej. 25"
+                    value={playerAge}
+                    onChange={(e) => setPlayerAge(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Foto del Jugador</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    id={`file-input-${fuerza}`}
+                    accept="image/png, image/jpeg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setPlayerPhoto(e.target.files[0]);
+                      } else {
+                        setPlayerPhoto(null);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="col-md-6 d-flex align-items-end">
+                  <button
+                    className="btn btn-primary w-100"
+                    onClick={() => handleRegisterPlayer(fuerza)}
+                    disabled={loading}
+                  >
+                    {loading ? "Registrando..." : "Registrar Jugador"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* ▲▲▲ FIN DE NUEVA SECCIÓN ▲▲▲ */}
           </Tab>
         ))}
       </Tabs>
@@ -643,7 +790,8 @@ export default function AdminFuerzas() {
         <div className="modal-content p-2">
           <div className="modal-header">
             <h5 className="modal-title">
-              Baseline · {teamBL?.nombre} ({teamBL?.fuerza} fuerza)
+              {" "}
+              Baseline · {teamBL?.nombre} ({teamBL?.fuerza} fuerza){" "}
             </h5>
             <button
               type="button"
@@ -735,9 +883,8 @@ export default function AdminFuerzas() {
               </div>
             </div>
             <small className="text-muted d-block mt-2">
-              La baseline aplica hasta la jornada indicada. Desde la siguiente
-              jornada, las estadísticas se suman automáticamente con los
-              partidos finalizados.
+              {" "}
+              La baseline aplica hasta la jornada indicada...{" "}
             </small>
           </div>
           <div className="modal-footer">
@@ -745,14 +892,16 @@ export default function AdminFuerzas() {
               className="btn btn-secondary"
               onClick={() => setShowBaseline(false)}
             >
-              Cancelar
+              {" "}
+              Cancelar{" "}
             </button>
             <button
               className="btn btn-success"
               onClick={saveBaseline}
               disabled={loading}
             >
-              {loading ? "Guardando..." : "Guardar"}
+              {" "}
+              {loading ? "Guardando..." : "Guardar"}{" "}
             </button>
           </div>
         </div>
@@ -770,22 +919,25 @@ export default function AdminFuerzas() {
             />
           </div>
           <div className="modal-body">
+            {" "}
             <input
               className="form-control"
               value={editedName}
               onChange={(e) => setEditedName(e.target.value)}
               placeholder="Nuevo nombre"
-            />
+            />{" "}
           </div>
           <div className="modal-footer">
             <button
               className="btn btn-secondary"
               onClick={() => setShowEdit(false)}
             >
-              Cancelar
+              {" "}
+              Cancelar{" "}
             </button>
             <button className="btn btn-primary" onClick={handleEdit}>
-              Guardar
+              {" "}
+              Guardar{" "}
             </button>
           </div>
         </div>
@@ -803,19 +955,22 @@ export default function AdminFuerzas() {
             />
           </div>
           <div className="modal-body">
+            {" "}
             ¿Estás seguro que deseas eliminar el equipo{" "}
             <strong>{teamToDelete?.nombre}</strong>? Esta acción no se puede
-            deshacer.
+            deshacer.{" "}
           </div>
           <div className="modal-footer">
             <button
               className="btn btn-secondary"
               onClick={() => setShowDelete(false)}
             >
-              Cancelar
+              {" "}
+              Cancelar{" "}
             </button>
             <button className="btn btn-danger" onClick={handleDelete}>
-              Eliminar
+              {" "}
+              Eliminar{" "}
             </button>
           </div>
         </div>
