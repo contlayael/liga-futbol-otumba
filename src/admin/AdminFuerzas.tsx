@@ -724,9 +724,11 @@ export default function AdminFuerzas() {
                       }))
                     }
                   >
-                    <option value="">Selecciona un equipo</option>
+                    <option value="" className="text-black">
+                      Selecciona un equipo
+                    </option>
                     {equipos[fuerza].map((t) => (
-                      <option key={t.id} value={t.id}>
+                      <option key={t.id} value={t.id} className="text-black">
                         {" "}
                         {t.nombre}{" "}
                       </option>
