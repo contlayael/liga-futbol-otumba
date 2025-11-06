@@ -1,5 +1,5 @@
-// src/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Inicio from "./pages/Inicio"; // <-- Importamos la nueva página de Inicio
 import TablaGeneral from "./pages/TablaGeneral";
 import RolDeJuego from "./pages/RolDeJuego";
 import TablaGoleo from "./pages/TablaGoleo";
@@ -23,8 +23,11 @@ function App() {
       <BrowserRouter>
         <Header />
         <Routes>
-          {/* Público */}
-          <Route path="/" element={<TablaGeneral />} />
+          {/* --- Rutas Públicas --- */}
+          {/* La ruta raíz ahora muestra Inicio */}
+          <Route path="/" element={<Inicio />} />
+          {/* Nueva ruta para la Tabla General */}
+          <Route path="/tabla-general" element={<TablaGeneral />} />
           <Route path="/rol-juego" element={<RolDeJuego />} />
           <Route path="/goleo" element={<TablaGoleo />} />
           <Route path="/avisos" element={<Avisos />} />
@@ -32,10 +35,10 @@ function App() {
           <Route path="/registros" element={<Registros />} />
           <Route path="/registros/:teamId" element={<PlantelEquipo />} />
 
-          {/* Login */}
+          {/* --- Login --- */}
           <Route path="/login" element={<Login />} />
 
-          {/* Rutas protegidas por rol */}
+          {/* --- Rutas Privadas (Admin/Árbitro) --- */}
           <Route
             path="/admin"
             element={

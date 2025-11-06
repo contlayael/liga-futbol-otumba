@@ -44,7 +44,7 @@ function PlayerCard({ player }: { player: Player }) {
           </Card.Text>
           <Link
             to={`/registros/${player.teamId}`}
-            className="btn btn-outline-light btn-sm text-white"
+            className="btn btn-outline-light btn-sm text-w"
           >
             Ver Plantel Completo
           </Link>

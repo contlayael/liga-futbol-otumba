@@ -1,4 +1,3 @@
-// src/layout/Header.tsx
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
@@ -20,7 +19,7 @@ export default function Header() {
   };
 
   return (
-    <header className="header-navbar bg-dark text-white py-3">
+    <header className="header-navbar py-3">
       <div className="container d-flex flex-wrap justify-content-between align-items-center">
         {/* Logo y título */}
         <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
@@ -41,37 +40,42 @@ export default function Header() {
         <nav className="d-flex flex-wrap align-items-center gap-3">
           <ul className="nav gap-2 mb-0">
             <li className="nav-item">
-              <NavLink to="/" className="nav-link text-white">
+              {/* Enlace a Inicio */}
+              <NavLink to="/" className="nav-link" end>
+                Inicio
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              {/* Enlace actualizado a Tabla General */}
+              <NavLink to="/tabla-general" className="nav-link">
                 Tabla General
               </NavLink>
             </li>
-            {/* ▼▼▼ NUEVO ENLACE AÑADIDO ▼▼▼ */}
             <li className="nav-item">
-              <NavLink to="/registros" className="nav-link text-white">
+              <NavLink to="/registros" className="nav-link">
                 Registros
               </NavLink>
             </li>
-            {/* ▲▲▲ FIN DE NUEVO ENLACE ▲▲▲ */}
             <li className="nav-item">
-              <NavLink to="/rol-juego" className="nav-link text-white">
+              <NavLink to="/rol-juego" className="nav-link">
                 Rol de juego
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink to="/goleo" className="nav-link text-white">
+              <NavLink to="/goleo" className="nav-link">
                 Tabla de Goleo
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink to="/avisos" className="nav-link text-white">
+              <NavLink to="/avisos" className="nav-link">
                 Avisos
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink to="/patrocinadores" className="nav-link text-white">
+            {/*<li className="nav-item">
+              <NavLink to="/patrocinadores" className="nav-link">
                 Patrocinadores
               </NavLink>
-            </li>
+            </li>*/}
           </ul>
 
           <div className="d-flex gap-2">
