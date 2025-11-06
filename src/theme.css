@@ -1,0 +1,215 @@
+/* 1. Importar la fuente profesional (Inter) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* 2. Definir la paleta de colores profesional */
+:root {
+  /* Paleta de Fondos y Superficies */
+  --color-bg-dark: #0F172A;     /* Azul-gris más oscuro (para el body) */
+  --color-bg-medium: #1E293B;   /* Azul-gris medio (para tarjetas, modales) */
+  
+  /* Paleta de Texto */
+  --color-text-primary: #F8FAFC;   /* Blanco suave (títulos, texto principal) */
+  --color-text-secondary: #94A3B8; /* Gris claro (subtítulos, texto silenciado) */
+  
+  /* Paleta de Acentos y Bordes */
+  --color-border: #334155;     /* Gris-azulado (para bordes sutiles) */
+  --color-primary: #3B82F6;     /* Azul vibrante (botones, links) */
+  --color-primary-hover: #2563EB; /* Azul más oscuro para hover */
+  --color-success: #10B981;     /* Verde "profesional" */
+  --color-danger: #EF4444;      /* Rojo */
+  --color-info: #0EA5E9;       /* Celeste */
+  --color-secondary: #64748B;   /* Gris para botones secundarios */
+}
+
+/* 3. Aplicar estilos base a la aplicación */
+body {
+  background-color: var(--color-bg-dark) !important;
+  color: var(--color-text-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* 4. Sobrescribir componentes de Bootstrap */
+
+/* --- Tarjetas (Cards) --- */
+/* Quitamos las clases 'card-body' y usamos esta nueva clase 'card-theme' */
+.card.card-theme {
+  background-color: var(--color-bg-medium);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem; /* Esquinas más redondeadas */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+.card.card-theme .card-body {
+  padding: 1.5rem; /* Más espacio interno */
+}
+.card.card-theme .card-title,
+.card.card-theme h5,
+.card.card-theme h6 {
+  color: var(--color-text-primary);
+}
+.card.card-theme .form-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.card.card-theme small {
+  color: var(--color-text-secondary) !important;
+}
+
+/* --- Modales --- */
+.modal-content {
+  background-color: var(--color-bg-medium) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.75rem;
+  color: var(--color-text-primary);
+}
+.modal-header {
+  border-bottom: 1px solid var(--color-border) !important;
+}
+.modal-footer {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+/* --- Pestañas (Tabs) --- */
+.nav-pills .nav-link {
+  color: var(--color-text-secondary);
+}
+.nav-pills .nav-link.active {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+/* --- Botones --- */
+/* Redefinimos los colores base para que coincidan con nuestra paleta */
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+}
+.btn-success {
+  background-color: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+  font-weight: 600;
+}
+.btn-danger {
+  background-color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+  font-weight: 600;
+}
+.btn-secondary {
+   background-color: var(--color-secondary) !important;
+   border-color: var(--color-secondary) !important;
+   font-weight: 600;
+}
+.btn-outline-info {
+  color: var(--color-info) !important;
+  border-color: var(--color-info) !important;
+}
+.btn-outline-danger {
+  color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+}
+.btn-outline-light {
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border) !important;
+}
+.btn-outline-light:hover {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-border) !important;
+}
+
+/* --- Formularios --- */
+.form-control, .form-select {
+  background-color: var(--color-bg-dark) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: 0.5rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+.form-control::placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+/*Botones*/
+.btn-light {
+  background-color: var(--color-text-secondary) !important;
+  border-color: var(--color-text-secondary) !important;
+  color: var(--color-bg-dark) !important;
+  font-weight: 600;
+}
+.btn-light:hover {
+  background-color: var(--color-text-primary) !important;
+  border-color: var(--color-text-primary) !important;
+}
+
+/* ▼▼▼ AÑADIR NUEVA SECCIÓN PARA HEADER ▼▼▼ */
+/* 5. Componentes Específicos */
+
+/* --- Header / Barra de Navegación --- */
+.header-navbar {
+  /* Usamos el color de fondo del body */
+  background-color: var(--color-bg-dark) !important;
+  /* Añadimos un borde inferior sutil */
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Estilos para los links de navegación del header (no-pills) */
+.header-navbar .nav-link {
+  color: var(--color-text-secondary) !important; /* Color de link apagado */
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem; /* Esquinas redondeadas para hover */
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.header-navbar .nav-link:hover {
+  color: var(--color-text-primary) !important; /* Color de link activo */
+  background-color: var(--color-bg-medium); /* Fondo sutil al pasar el mouse */
+}
+
+/* El .active es de React Router (NavLink) */
+.header-navbar .nav-link.active {
+  color: var(--color-primary) !important; /* Color de acento */
+  font-weight: 600;
+  background-color: transparent; /* Sin fondo, solo color */
+}
+
+.header-navbar .h5 {
+  color: var(--color-text-primary) !important;
+}
+/* ▲▲▲ FIN DE SECCIÓN AÑADIDA ▲▲▲ */
+
+/* ▼▼▼ AÑADIR ESTA NUEVA SECCIÓN AL FINAL ▼▼▼ */
+
+/* 6. Breadcrumbs (Migas de Pan) */
+.breadcrumb {
+  /* Asegurarnos de que los márgenes se vean bien */
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item a {
+  /* Color de acento para los enlaces (ej. "Registros") */
+  color: var(--color-primary) !important; 
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+  /* Color blanco para el item activo (ej. "Cruz Azul") */
+  color: var(--color-text-primary) !important;
+}
+
+/* Color del separador "/" */
+.breadcrumb-item + .breadcrumb-item::before {
+  color: var(--color-text-secondary) !important; /* Gris claro */
+}
+/* ▲▲▲ FIN DE SECCIÓN AÑADIDA ▲▲▲ */

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Tabs, Tab, Modal } from "react-bootstrap";
 import {
   addTeam,
@@ -458,6 +459,12 @@ export default function AdminFuerzas() {
       {info && <div className="alert alert-info">{info}</div>}
       {loading && <p className="text-muted">Procesando…</p>}
 
+      <div className="d-flex justify-content-end mb-3">
+        <Link to="/admin/sanciones" className="btn btn-warning">
+          Gestionar Sanciones
+        </Link>
+      </div>
+
       {/* Pestañas Principales (Fuerzas) */}
       <Tabs
         activeKey={activeKey}
@@ -481,76 +488,84 @@ export default function AdminFuerzas() {
             >
               {/* --- Sub-pestaña 1: Equipos --- */}
               <Tab eventKey="equipos" title="Administrar Equipos">
-                {/* Alta de equipos */}
-                <div className="card card-body mb-4">
-                  <div className="row g-2 align-items-end">
-                    <div className="col-sm-8 col-md-6">
-                      <input
-                        className="form-control"
-                        value={nuevoNombre[fuerza]}
-                        onChange={(e) =>
-                          setNuevoNombre((prev) => ({
-                            ...prev,
-                            [fuerza]: e.target.value,
-                          }))
-                        }
-                        placeholder="Ej. Estudiantes"
-                      />
+                {/* ▼▼▼ MODIFICACIÓN AQUÍ ▼▼▼ */}
+                {/* Se quita 'card-body' y se añade 'card-theme' */}
+                <div className="card card-theme mb-4">
+                  <div className="card-body">
+                    {" "}
+                    {/* Se mantiene el card-body interno para padding */}
+                    <div className="row g-2 align-items-end">
+                      <div className="col-sm-8 col-md-6">
+                        <input
+                          className="form-control"
+                          value={nuevoNombre[fuerza]}
+                          onChange={(e) =>
+                            setNuevoNombre((prev) => ({
+                              ...prev,
+                              [fuerza]: e.target.value,
+                            }))
+                          }
+                          placeholder="Ej. Estudiantes"
+                        />
+                      </div>
+                      <div className="col-auto">
+                        <button
+                          className="btn btn-success" // btn-success fue re-estilizado en theme.css
+                          onClick={() => handleAddTeam(fuerza)}
+                          disabled={loading}
+                        >
+                          {loading ? "Guardando..." : "Agregar equipo"}
+                        </button>
+                      </div>
                     </div>
-                    <div className="col-auto">
-                      <button
-                        className="btn btn-success"
-                        onClick={() => handleAddTeam(fuerza)}
-                        disabled={loading}
-                      >
-                        {loading ? "Guardando..." : "Agregar equipo"}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <strong>Equipos en {fuerza}:</strong>
-                    <div className="mt-2">
-                      {equipos[fuerza].length === 0 ? (
-                        <span className="text-muted">No hay equipos aún.</span>
-                      ) : (
-                        <ul className="mb-0 list-unstyled">
-                          {equipos[fuerza].map((t) => (
-                            <li
-                              key={t.id}
-                              className="d-flex justify-content-between align-items-center py-1"
-                            >
-                              <span>
-                                {t.nombre}{" "}
-                                {t.baseline && (
-                                  <span className="badge bg-success ms-2">
-                                    BL J{t.baseline.upToRound}
-                                  </span>
-                                )}
-                              </span>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-outline-info btn-sm"
-                                  onClick={() => openEditModal(t)}
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() => openDeleteModal(t)}
-                                >
-                                  Eliminar
-                                </button>
-                                <button
-                                  className="btn btn-outline-light btn-sm"
-                                  onClick={() => openBaseline(t)}
-                                >
-                                  Baseline
-                                </button>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                    <div className="mt-3">
+                      <strong>Equipos en {fuerza}:</strong>
+                      <div className="mt-2">
+                        {equipos[fuerza].length === 0 ? (
+                          <span className="text-muted">
+                            No hay equipos aún.
+                          </span>
+                        ) : (
+                          <ul className="mb-0 list-unstyled">
+                            {equipos[fuerza].map((t) => (
+                              <li
+                                key={t.id}
+                                className="d-flex justify-content-between align-items-center py-1"
+                              >
+                                <span>
+                                  {t.nombre}{" "}
+                                  {t.baseline && (
+                                    <span className="badge bg-success ms-2">
+                                      BL J{t.baseline.upToRound}
+                                    </span>
+                                  )}
+                                </span>
+                                <div className="d-flex gap-2">
+                                  {/* Botones outline re-estilizados */}
+                                  <button
+                                    className="btn btn-outline-info btn-sm"
+                                    onClick={() => openEditModal(t)}
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => openDeleteModal(t)}
+                                  >
+                                    Eliminar
+                                  </button>
+                                  <button
+                                    className="btn btn-outline-light btn-sm"
+                                    onClick={() => openBaseline(t)}
+                                  >
+                                    Baseline
+                                  </button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -558,284 +573,299 @@ export default function AdminFuerzas() {
 
               {/* --- Sub-pestaña 2: Partidos --- */}
               <Tab eventKey="partidos" title="Programar Partidos">
-                {/* Rol de juego */}
-                <div className="card card-body mb-4">
-                  <div className="row g-3">
-                    <div className="col-sm-4 col-md-3">
-                      <label className="form-label">Fecha</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={matchDate[fuerza]}
-                        onChange={(e) =>
-                          setMatchDate((prev) => ({
-                            ...prev,
-                            [fuerza]: e.target.value,
-                          }))
-                        }
-                      />
-                      <small className="text-white">
-                        Ej: 2025-09-21 (domingo)
-                      </small>
-                    </div>
-                    <div className="col-sm-4 col-md-2">
-                      <label className="form-label">Jornada</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        min={1}
-                        value={round[fuerza]}
-                        onChange={(e) =>
-                          setRound((prev) => ({
-                            ...prev,
-                            [fuerza]: parseInt(e.target.value || "1", 10),
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  <hr />
-                  <h6 className="mb-2">Agregar partidos</h6>
-                  {rows[fuerza].map((r) => (
-                    <div className="row g-2 align-items-end mb-2" key={r.id}>
-                      <div className="col-lg-3">
-                        <label className="form-label">Local</label>
-                        <select
-                          className="form-select"
-                          value={r.homeTeamId}
-                          onChange={(e) =>
-                            updateRow(fuerza, r.id, {
-                              homeTeamId: e.target.value,
-                            })
-                          }
-                        >
-                          <option className="text-black" value="">
-                            Selecciona equipo
-                          </option>
-                          {equipos[fuerza].map((t) => (
-                            <option
-                              value={t.id}
-                              key={t.id}
-                              className="text-black"
-                            >
-                              {t.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-lg-3">
-                        <label className="form-label">Visitante</label>
-                        <select
-                          className="form-select text-black"
-                          value={r.awayTeamId}
-                          onChange={(e) =>
-                            updateRow(fuerza, r.id, {
-                              awayTeamId: e.target.value,
-                            })
-                          }
-                        >
-                          <option className="text-black" value="">
-                            Selecciona equipo
-                          </option>
-                          {equipos[fuerza].map((t) => (
-                            <option
-                              value={t.id}
-                              key={t.id}
-                              className="text-black"
-                            >
-                              {t.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-lg-2 col-sm-6">
-                        <label className="form-label">Cancha</label>
+                {/* ▼▼▼ MODIFICACIÓN AQUÍ ▼▼▼ */}
+                <div className="card card-theme mb-4">
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-sm-4 col-md-3">
+                        <label className="form-label">Fecha</label>
                         <input
+                          type="date"
                           className="form-control"
-                          placeholder="Cancha 1"
-                          value={r.field}
+                          value={matchDate[fuerza]}
                           onChange={(e) =>
-                            updateRow(fuerza, r.id, { field: e.target.value })
+                            setMatchDate((prev) => ({
+                              ...prev,
+                              [fuerza]: e.target.value,
+                            }))
+                          }
+                        />
+                        <small>
+                          {" "}
+                          {/* Quitado text-white */}
+                          Ej: 2025-09-21 (domingo)
+                        </small>
+                      </div>
+                      <div className="col-sm-4 col-md-2">
+                        <label className="form-label">Jornada</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          min={1}
+                          value={round[fuerza]}
+                          onChange={(e) =>
+                            setRound((prev) => ({
+                              ...prev,
+                              [fuerza]: parseInt(e.target.value || "1", 10),
+                            }))
                           }
                         />
                       </div>
-                      <div className="col-lg-2 col-sm-6">
-                        <label className="form-label">Hora</label>
-                        <input
-                          type="time"
-                          className="form-control"
-                          value={r.time}
-                          onChange={(e) =>
-                            updateRow(fuerza, r.id, { time: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="col-lg-2 col-sm-12">
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger w-100"
-                          onClick={() => removeRow(fuerza, r.id)}
-                          disabled={rows[fuerza].length === 1}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
                     </div>
-                  ))}
-                  <div className="d-flex gap-2 mt-2">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => addRow(fuerza)}
-                    >
-                      + Agregar partido
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-success"
-                      onClick={() => saveSchedule(fuerza)}
-                      disabled={loading}
-                    >
-                      {loading ? "Guardando..." : "Guardar rol de juego"}
-                    </button>
-                  </div>
-                  <hr />
-                  <h6 className="mb-2">Programados para {matchDate[fuerza]}</h6>
-                  <div className="table-responsive">
-                    <table className="table table-sm table-striped align-middle">
-                      <thead className="table-dark">
-                        <tr>
-                          <th>Jornada</th>
-                          <th>Hora</th>
-                          <th>Cancha</th>
-                          <th>Local</th>
-                          <th>Visitante</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {programados[fuerza].length === 0 ? (
+                    <hr style={{ borderColor: "var(--color-border)" }} />{" "}
+                    {/* Hr con color de tema */}
+                    <h6 className="mb-2">Agregar partidos</h6>
+                    {rows[fuerza].map((r) => (
+                      <div className="row g-2 align-items-end mb-2" key={r.id}>
+                        <div className="col-lg-3">
+                          <label className="form-label">Local</label>
+                          <select
+                            className="form-select"
+                            value={r.homeTeamId}
+                            onChange={(e) =>
+                              updateRow(fuerza, r.id, {
+                                homeTeamId: e.target.value,
+                              })
+                            }
+                          >
+                            <option className="text-black" value="">
+                              Selecciona equipo
+                            </option>
+                            {equipos[fuerza].map((t) => (
+                              <option
+                                value={t.id}
+                                key={t.id}
+                                className="text-black"
+                              >
+                                {t.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-lg-3">
+                          <label className="form-label">Visitante</label>
+                          <select
+                            className="form-select" // quitado text-black
+                            value={r.awayTeamId}
+                            onChange={(e) =>
+                              updateRow(fuerza, r.id, {
+                                awayTeamId: e.target.value,
+                              })
+                            }
+                          >
+                            <option className="text-black" value="">
+                              Selecciona equipo
+                            </option>
+                            {equipos[fuerza].map((t) => (
+                              <option
+                                value={t.id}
+                                key={t.id}
+                                className="text-black"
+                              >
+                                {t.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {/* ... (inputs de cancha y hora no cambian) ... */}
+                        <div className="col-lg-2 col-sm-6">
+                          <label className="form-label">Cancha</label>
+                          <input
+                            className="form-control"
+                            placeholder="Cancha 1"
+                            value={r.field}
+                            onChange={(e) =>
+                              updateRow(fuerza, r.id, { field: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="col-lg-2 col-sm-6">
+                          <label className="form-label">Hora</label>
+                          <input
+                            type="time"
+                            className="form-control"
+                            value={r.time}
+                            onChange={(e) =>
+                              updateRow(fuerza, r.id, { time: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="col-lg-2 col-sm-12">
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger w-100"
+                            onClick={() => removeRow(fuerza, r.id)}
+                            disabled={rows[fuerza].length === 1}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="d-flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        className="btn btn-secondary" // Re-estilizado
+                        onClick={() => addRow(fuerza)}
+                      >
+                        + Agregar partido
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-success" // Re-estilizado
+                        onClick={() => saveSchedule(fuerza)}
+                        disabled={loading}
+                      >
+                        {loading ? "Guardando..." : "Guardar rol de juego"}
+                      </button>
+                    </div>
+                    <hr style={{ borderColor: "var(--color-border)" }} />
+                    <h6 className="mb-2">
+                      Programados para {matchDate[fuerza]}
+                    </h6>
+                    <div className="table-responsive">
+                      {/* Las tablas de Bootstrap se adaptan bien al tema oscuro por defecto */}
+                      <table className="table table-sm table-striped align-middle">
+                        <thead className="table-dark">
                           <tr>
-                            <td colSpan={6} className="text-center text-muted">
-                              Sin partidos programados.
-                            </td>
+                            <th>Jornada</th>
+                            <th>Hora</th>
+                            <th>Cancha</th>
+                            <th>Local</th>
+                            <th>Visitante</th>
+                            <th></th>
                           </tr>
-                        ) : (
-                          programados[fuerza].map((m) => (
-                            <tr key={m.id}>
-                              <td>{m.round}</td>
-                              <td>{m.time}</td>
-                              <td>{m.field}</td>
-                              <td>{nameById.get(m.homeTeamId) ?? "—"}</td>
-                              <td>{nameById.get(m.awayTeamId) ?? "—"}</td>
-                              <td className="text-end">
-                                <button
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() =>
-                                    handleDeleteMatch(fuerza, m.id)
-                                  }
-                                >
-                                  Eliminar
-                                </button>
+                        </thead>
+                        <tbody>
+                          {programados[fuerza].length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="text-center text-muted"
+                              >
+                                Sin partidos programados.
                               </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            programados[fuerza].map((m) => (
+                              <tr key={m.id}>
+                                <td>{m.round}</td>
+                                <td>{m.time}</td>
+                                <td>{m.field}</td>
+                                <td>{nameById.get(m.homeTeamId) ?? "—"}</td>
+                                <td>{nameById.get(m.awayTeamId) ?? "—"}</td>
+                                <td className="text-end">
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                      handleDeleteMatch(fuerza, m.id)
+                                    }
+                                  >
+                                    Eliminar
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </Tab>
 
               {/* --- Sub-pestaña 3: Jugadores --- */}
               <Tab eventKey="jugadores" title="Registrar Jugadores">
-                <div className="card card-body mb-4">
-                  <h5 className="mb-3">
-                    Registrar Jugadores en {fuerza} Fuerza
-                  </h5>
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <label className="form-label">Equipo</label>
-                      <select
-                        className="form-select"
-                        value={playerTeamId[fuerza]}
-                        onChange={(e) =>
-                          setPlayerTeamId((prev) => ({
-                            ...prev,
-                            [fuerza]: e.target.value,
-                          }))
-                        }
-                      >
-                        <option value="" className="text-black">
-                          Selecciona un equipo
-                        </option>
-                        {equipos[fuerza].map((t) => (
-                          <option
-                            key={t.id}
-                            value={t.id}
-                            className="text-black"
-                          >
-                            {t.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-md-5">
-                      <label className="form-label">Nombre del Jugador</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Ej. Cristiano Ronaldo"
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">
-                        ID de Registro (Ej. CURP)
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="ID Único del Jugador"
-                        value={playerRegistroId}
-                        onChange={(e) => setPlayerRegistroId(e.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-3">
-                      <label className="form-label">Edad</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="Ej. 25"
-                        value={playerAge}
-                        onChange={(e) => setPlayerAge(e.target.value)}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Foto del Jugador</label>
-                      <input
-                        type="file"
-                        className="form-control"
-                        id={`file-input-${fuerza}`}
-                        accept="image/png, image/jpeg"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files.length > 0) {
-                            setPlayerPhoto(e.target.files[0]);
-                          } else {
-                            setPlayerPhoto(null);
+                {/* ▼▼▼ MODIFICACIÓN AQUÍ ▼▼▼ */}
+                <div className="card card-theme mb-4">
+                  <div className="card-body">
+                    <h5 className="mb-3">
+                      Registrar Jugadores en {fuerza} Fuerza
+                    </h5>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label className="form-label">Equipo</label>
+                        <select
+                          className="form-select"
+                          value={playerTeamId[fuerza]}
+                          onChange={(e) =>
+                            setPlayerTeamId((prev) => ({
+                              ...prev,
+                              [fuerza]: e.target.value,
+                            }))
                           }
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-4 d-flex align-items-end">
-                      <button
-                        className="btn btn-primary w-100"
-                        onClick={() => handleRegisterPlayer(fuerza)}
-                        disabled={loading}
-                      >
-                        {loading ? "Registrando..." : "Registrar Jugador"}
-                      </button>
+                        >
+                          <option value="" className="text-black">
+                            Selecciona un equipo
+                          </option>
+                          {equipos[fuerza].map((t) => (
+                            <option
+                              key={t.id}
+                              value={t.id}
+                              className="text-black"
+                            >
+                              {t.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-md-5">
+                        <label className="form-label">Nombre del Jugador</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Ej. Cristiano Ronaldo"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label">
+                          ID de Registro (Ej. CURP)
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="ID Único del Jugador"
+                          value={playerRegistroId}
+                          onChange={(e) => setPlayerRegistroId(e.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Edad</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="Ej. 25"
+                          value={playerAge}
+                          onChange={(e) => setPlayerAge(e.target.value)}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Foto del Jugador</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          id={`file-input-${fuerza}`}
+                          accept="image/png, image/jpeg"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              setPlayerPhoto(e.target.files[0]);
+                            } else {
+                              setPlayerPhoto(null);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="col-md-4 d-flex align-items-end">
+                        <button
+                          className="btn btn-primary w-100" // Re-estilizado
+                          onClick={() => handleRegisterPlayer(fuerza)}
+                          disabled={loading}
+                        >
+                          {loading ? "Registrando..." : "Registrar Jugador"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -846,18 +876,19 @@ export default function AdminFuerzas() {
         ))}
       </Tabs>
 
-      {/* Todos los Modales van FUERA de las pestañas */}
+      {/* Todos los Modales (sin cambios en la lógica, se adaptarán por CSS) */}
 
-      {/* Baseline Modal */}
       <Modal show={showBaseline} onHide={() => setShowBaseline(false)} centered>
-        <div className="modal-content p-2">
+        <div className="modal-content">
+          {" "}
+          {/* Quitamos p-2 para que se vea bien */}
           <div className="modal-header">
             <h5 className="modal-title">
               Baseline · {teamBL?.nombre} ({teamBL?.fuerza} fuerza)
             </h5>
             <button
               type="button"
-              className="btn-close"
+              className="btn-close btn-close-white"
               onClick={() => setShowBaseline(false)}
             />
           </div>
@@ -945,7 +976,9 @@ export default function AdminFuerzas() {
               </div>
             </div>
             <small className="text-muted d-block mt-2">
-              La baseline aplica hasta la jornada indicada...
+              La baseline aplica hasta la jornada indicada. Desde la siguiente
+              jornada, las estadísticas se suman automáticamente con los
+              partidos finalizados.
             </small>
           </div>
           <div className="modal-footer">
@@ -968,12 +1001,14 @@ export default function AdminFuerzas() {
 
       {/* Modal editar */}
       <Modal show={showEdit} onHide={() => setShowEdit(false)} centered>
-        <div className="modal-content p-3">
+        <div className="modal-content">
+          {" "}
+          {/* Quitamos p-3 */}
           <div className="modal-header">
             <h5 className="modal-title">Editar nombre de equipo</h5>
             <button
               type="button"
-              className="btn-close"
+              className="btn-close btn-close-white"
               onClick={() => setShowEdit(false)}
             />
           </div>
@@ -1001,12 +1036,14 @@ export default function AdminFuerzas() {
 
       {/* Modal eliminar */}
       <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
-        <div className="modal-content p-3">
+        <div className="modal-content">
+          {" "}
+          {/* Quitamos p-3 */}
           <div className="modal-header">
             <h5 className="modal-title text-danger">¿Eliminar equipo?</h5>
             <button
               type="button"
-              className="btn-close"
+              className="btn-close btn-close-white"
               onClick={() => setShowDelete(false)}
             />
           </div>

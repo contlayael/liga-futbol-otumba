@@ -28,6 +28,9 @@ export interface NewMatch {
   awayScore?: number;
   // Metadata opcional para W.O. (por si luego tu cliente lo pide)
   woTeamId?: string | null; // equipo que NO se presentó (si aplica)
+  // Guardaremos solo los IDs de los jugadores
+  yellowCardCount?: { [playerId: string]: number };
+  redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
 }
 
 export interface Match extends NewMatch {
@@ -106,6 +109,10 @@ export function subscribeFinishedMatchesByFuerza(
 }
 
 // 🔧 Actualizar marcador (normal o W.O.)
+/**
+ * Actualiza el marcador y las tarjetas de un partido.
+ * Esta función es llamada por el DashboardArbitro.
+ */
 export async function updateMatchScore(
   matchId: string,
   payload: {
@@ -113,6 +120,10 @@ export async function updateMatchScore(
     awayScore: number;
     status?: MatchStatus; // por defecto "finished"
     woTeamId?: string | null; // opcional
+    
+    // Tipos actualizados para coincidir con la nueva estructura
+    yellowCardCount?: { [playerId: string]: number };
+    redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
   }
 ) {
   const ref = doc(db, "matches", matchId);
@@ -121,6 +132,10 @@ export async function updateMatchScore(
     awayScore: payload.awayScore,
     status: payload.status ?? "finished",
     woTeamId: payload.woTeamId ?? null,
+    
+    // Guardamos los nuevos objetos/mapas
+    yellowCardCount: payload.yellowCardCount ?? {},
+    redCardReason: payload.redCardReason ?? {},
   });
 }
 

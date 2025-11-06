@@ -14,6 +14,8 @@ import Header from "./layout/Header";
 import Footer from "./layout/Footer";
 import Registros from "./pages/Registros";
 import PlantelEquipo from "./pages/PlantelEquipo";
+import AdminSanciones from "./admin/AdminSanciones";
+import "./theme.css";
 
 function App() {
   return (
@@ -39,6 +41,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <DashboardAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/sanciones"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminSanciones />
               </ProtectedRoute>
             }
           />
