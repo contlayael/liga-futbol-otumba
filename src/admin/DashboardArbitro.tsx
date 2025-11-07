@@ -1,3 +1,4 @@
+// src/admin/DashboardArbitro.tsx
 import { useEffect, useState } from "react";
 import { Tabs, Tab, Modal, Button, Form, Table } from "react-bootstrap";
 import {
@@ -8,7 +9,7 @@ import {
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
 import type { Fuerza } from "../services/teams";
-import { type Player } from "../services/players"; // No necesitamos getPlayersByTeamId aquí
+import { type Player } from "../services/players";
 import {
   createDefaultSuspension,
   getActiveSuspensionForPlayer,
@@ -24,24 +25,25 @@ function todayYMD() {
   return toYMD(new Date());
 }
 
-// --- Tipo de estado de edición actualizado ---
 type CardEditState = {
   yellows: 0 | 1 | 2;
   redDirect: boolean;
 };
 
+// ▼▼▼ TIPO ACTUALIZADO ▼▼▼
 type EditRow = {
   homeScore: string;
   awayScore: string;
   noShow: "none" | "home" | "away";
   defaultWin: string;
-  /**
-   * Mapea un playerId a su estado de tarjetas para este partido.
-   * Ejemplo: { "player-abc": { yellows: 2, redDirect: false } }
-   */
   cardEdits: { [playerId: string]: CardEditState };
+  /**
+   * Mapea un playerId al NÚMERO de goles que anotó en este partido.
+   * Ejemplo: { "player-abc": 3 }
+   */
+  scorerEdits: { [playerId: string]: number };
 };
-// --- Fin de tipo actualizado ---
+// ▲▲▲ FIN ▲▲▲
 
 export default function DashboardArbitro() {
   const [date, setDate] = useState<string>(todayYMD());
@@ -54,7 +56,10 @@ export default function DashboardArbitro() {
   const [allPlayersMap, setAllPlayersMap] = useState<Map<string, Player>>(
     new Map()
   );
+
+  // Estados de Modales
   const [showCardModal, setShowCardModal] = useState(false);
+  const [showGolesModal, setShowGolesModal] = useState(false); // <-- NUEVO ESTADO
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
   const [edits, setEdits] = useState<Record<string, EditRow>>({});
@@ -87,17 +92,12 @@ export default function DashboardArbitro() {
     FUERZAS.forEach((fuerza) => {
       const unsub = subscribeMatchesByDateAndFuerza(date, fuerza, (arr) => {
         setMatchesByFuerza((prev) => ({ ...prev, [fuerza]: arr }));
-
-        // Inicializa ediciones para filas nuevas
         setEdits((prev) => {
           const next = { ...prev };
           arr.forEach((m) => {
             if (!next[m.id]) {
-              // --- Lógica de inicialización de tarjetas actualizada ---
               const initialCardEdits: { [playerId: string]: CardEditState } =
                 {};
-
-              // 1. Pre-poblar desde yellowCardCount (nueva estructura)
               if (m.yellowCardCount) {
                 for (const [pid, count] of Object.entries(m.yellowCardCount)) {
                   initialCardEdits[pid] = {
@@ -106,7 +106,6 @@ export default function DashboardArbitro() {
                   };
                 }
               }
-              // 2. Pre-poblar desde redCardReason (nueva estructura)
               if (m.redCardReason) {
                 for (const [pid, reason] of Object.entries(m.redCardReason)) {
                   const currentState = initialCardEdits[pid] || {
@@ -120,7 +119,6 @@ export default function DashboardArbitro() {
                   };
                 }
               }
-              // --- Fin de lógica ---
 
               next[m.id] = {
                 homeScore: m.homeScore != null ? String(m.homeScore) : "",
@@ -131,7 +129,10 @@ export default function DashboardArbitro() {
                     : "away"
                   : "none",
                 defaultWin: "3",
-                cardEdits: initialCardEdits, // Asignar estado inicial
+                cardEdits: initialCardEdits,
+                // ▼▼▼ LÓGICA AÑADIDA ▼▼▼
+                scorerEdits: m.scorers ?? {}, // Cargar goles guardados
+                // ▲▲▲ FIN ▲▲▲
               };
             }
           });
@@ -153,6 +154,7 @@ export default function DashboardArbitro() {
     }));
   }
 
+  // --- Funciones de Modales (NUEVAS Y ACTUALIZADAS) ---
   const openCardModal = (match: Match) => {
     setCurrentMatch(match);
     setShowCardModal(true);
@@ -162,12 +164,24 @@ export default function DashboardArbitro() {
     setShowCardModal(false);
   };
 
+  const openGolesModal = (match: Match) => {
+    // <-- NUEVA FUNCIÓN
+    setCurrentMatch(match);
+    setShowGolesModal(true);
+  };
+  const closeGolesModal = () => {
+    // <-- NUEVA FUNCIÓN
+    setCurrentMatch(null);
+    setShowGolesModal(false);
+  };
+  // --- FIN ---
+
   // --- Función de Guardado Actualizada ---
   async function save(match: Match) {
     const e = edits[match.id];
     if (!e) return;
 
-    // Lógica de score y WO (sin cambios)
+    // Lógica de score y WO
     let home = parseInt(e.homeScore || "0", 10);
     let away = parseInt(e.awayScore || "0", 10);
     const def = Math.max(0, parseInt(e.defaultWin || "3", 10));
@@ -186,44 +200,50 @@ export default function DashboardArbitro() {
       return;
     }
 
-    // --- NUEVA LÓGICA DE TARJETAS ---
+    // Lógica de Tarjetas
     const yellowCardCount: { [playerId: string]: number } = {};
     const redCardReason: {
       [playerId: string]: "Doble Amarilla" | "Roja Directa";
     } = {};
     const playerIdsWithCards = Object.keys(e.cardEdits);
-
     for (const playerId of playerIdsWithCards) {
       const cardData = e.cardEdits[playerId];
-
-      // 1. Guardar conteo de amarillas (si es > 0)
-      if (cardData.yellows > 0) {
-        yellowCardCount[playerId] = cardData.yellows;
-      }
-
-      // 2. Determinar motivo de roja
-      if (cardData.redDirect) {
-        redCardReason[playerId] = "Roja Directa";
-      } else if (cardData.yellows === 2) {
+      if (cardData.yellows > 0) yellowCardCount[playerId] = cardData.yellows;
+      if (cardData.redDirect) redCardReason[playerId] = "Roja Directa";
+      else if (cardData.yellows === 2)
         redCardReason[playerId] = "Doble Amarilla";
-      }
     }
-    // --- FIN LÓGICA DE TARJETAS ---
+
+    // ▼▼▼ NUEVA LÓGICA DE GOLES (CON VALIDACIÓN) ▼▼▼
+    const scorers = e.scorerEdits ?? {};
+    let totalGoalsAssigned = 0;
+    Object.values(scorers).forEach((goals) => {
+      totalGoalsAssigned += goals;
+    });
+
+    const totalGoalsInScore = home + away;
+    if (totalGoalsAssigned !== totalGoalsInScore && e.noShow === "none") {
+      alert(
+        `Error: El marcador es ${home}-${away} (Total: ${totalGoalsInScore}), pero asignaste ${totalGoalsAssigned} goles. Los totales deben coincidir.`
+      );
+      return; // Detener el guardado
+    }
+    // ▲▲▲ FIN ▲▲▲
 
     try {
-      // 1. Guardar el marcador y las listas de tarjetas en el Match
+      // 1. Guardar el marcador, tarjetas y GOLES
       await updateMatchScore(match.id, {
         homeScore: home,
         awayScore: away,
         status: "finished",
         woTeamId,
-        yellowCardCount: yellowCardCount, // <-- Nueva estructura
-        redCardReason: redCardReason, // <-- Nueva estructura
+        yellowCardCount: yellowCardCount,
+        redCardReason: redCardReason,
+        scorers: scorers, // <-- AÑADIDO
       });
 
-      // 2. Crear sanciones para TODAS las tarjetas rojas reportadas
+      // 2. Crear sanciones (sin cambios)
       const redCardPlayerIds = Object.keys(redCardReason);
-
       for (const playerId of redCardPlayerIds) {
         const player = allPlayersMap.get(playerId);
         if (player) {
@@ -231,7 +251,7 @@ export default function DashboardArbitro() {
             playerId
           );
           if (!existingSuspension) {
-            const reason = redCardReason[playerId]; // "Roja Directa" o "Doble Amarilla"
+            const reason = redCardReason[playerId];
             await createDefaultSuspension(player, match, reason);
           }
         }
@@ -242,11 +262,10 @@ export default function DashboardArbitro() {
     }
   }
 
-  // --- JSX (con botón de tarjetas actualizado) ---
+  // --- JSX ---
   return (
     <div className="container py-4">
       <h2 className="mb-3">Panel del Árbitro</h2>
-      {/* ... (Selector de fecha y Tabs de Fuerza sin cambios) ... */}
       <div className="row g-3 align-items-end mb-3">
         <div className="col-auto">
           <label className="form-label">Fecha</label>
@@ -279,6 +298,8 @@ export default function DashboardArbitro() {
                       <th className="text-start">Visitante</th>
                       <th className="text-center">Goles</th>
                       <th>W.O.</th>
+                      <th>Goles</th>
+                      {/* <-- NUEVA COLUMNA */}
                       <th>Tarjetas</th>
                       <th>Guardar</th>
                       <th>Estatus</th>
@@ -290,7 +311,7 @@ export default function DashboardArbitro() {
                       if (!ed)
                         return (
                           <tr key={m.id}>
-                            <td colSpan={10}>Cargando...</td>
+                            <td colSpan={11}>Cargando...</td>
                           </tr>
                         );
 
@@ -298,16 +319,22 @@ export default function DashboardArbitro() {
                       const visita = teamsMap.get(m.awayTeamId) ?? "Visitante";
                       const finished = m.status === "finished";
 
-                      // Contar tarjetas desde el estado 'edits'
                       let totalYellows = 0;
                       let totalReds = 0;
                       if (ed.cardEdits) {
                         Object.values(ed.cardEdits).forEach((card) => {
                           totalYellows += card.yellows;
-                          if (card.redDirect || card.yellows === 2) {
+                          if (card.redDirect || card.yellows === 2)
                             totalReds += 1;
-                          }
                         });
+                      }
+                      // Contar goles asignados
+                      let totalGoals = 0;
+                      if (ed.scorerEdits) {
+                        totalGoals = Object.values(ed.scorerEdits).reduce(
+                          (sum, count) => sum + count,
+                          0
+                        );
                       }
 
                       return (
@@ -373,6 +400,18 @@ export default function DashboardArbitro() {
                               />
                             </div>
                           </td>
+                          {/* ▼▼▼ NUEVO BOTÓN DE GOLES ▼▼▼ */}
+                          <td>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => openGolesModal(m)}
+                              disabled={ed.noShow !== "none"} // Deshabilitar si fue W.O.
+                            >
+                              Goles ({totalGoals})
+                            </Button>
+                          </td>
+                          {/* ▲▲▲ FIN ▲▲▲ */}
                           <td>
                             <Button
                               variant="outline-warning"
@@ -413,7 +452,7 @@ export default function DashboardArbitro() {
         ))}
       </Tabs>
 
-      {/* Modal para Tarjetas (con lógica actualizada) */}
+      {/* Modal para Tarjetas (sin cambios) */}
       {currentMatch && (
         <TarjetasModal
           show={showCardModal}
@@ -424,12 +463,24 @@ export default function DashboardArbitro() {
           onEdit={(patch) => setEdit(currentMatch.id, patch)}
         />
       )}
+
+      {/* ▼▼▼ NUEVO MODAL PARA GOLES ▼▼▼ */}
+      {currentMatch && (
+        <GolesModal
+          show={showGolesModal}
+          onHide={closeGolesModal}
+          match={currentMatch}
+          allPlayersMap={allPlayersMap}
+          editData={edits[currentMatch.id]}
+          onEdit={(patch) => setEdit(currentMatch.id, patch)}
+        />
+      )}
+      {/* ▲▲▲ FIN ▲▲▲ */}
     </div>
   );
 }
 
-// --- Componente del Modal de Tarjetas (Reescrito) ---
-
+// --- Componente del Modal de Tarjetas (sin cambios) ---
 interface TarjetasModalProps {
   show: boolean;
   onHide: () => void;
@@ -438,7 +489,6 @@ interface TarjetasModalProps {
   editData: EditRow;
   onEdit: (patch: Partial<EditRow>) => void;
 }
-
 function TarjetasModal({
   show,
   onHide,
@@ -455,7 +505,6 @@ function TarjetasModal({
       (p) => p.teamId === match.awayTeamId
     ),
   ];
-
   const teamsMap = new Map();
   teamsMap.set(
     match.homeTeamId,
@@ -466,7 +515,6 @@ function TarjetasModal({
     allPlayersMap.get(awayPlayers[0]?.id)?.teamName ?? "Visitante"
   );
 
-  // Función para manejar el cambio en el select o checkbox
   const handleCardChange = (
     playerId: string,
     type: "yellows" | "redDirect",
@@ -477,27 +525,17 @@ function TarjetasModal({
       redDirect: false,
     };
     let newCardState: CardEditState;
-
     if (type === "yellows") {
       newCardState = {
         ...currentCardState,
         yellows: parseInt(value as string, 10) as 0 | 1 | 2,
       };
     } else {
-      // redDirect
       newCardState = { ...currentCardState, redDirect: value as boolean };
     }
-
-    // Si marcamos 2 amarillas, deshabilitamos la roja directa (y viceversa)
     if (newCardState.yellows === 2) newCardState.redDirect = false;
-    if (newCardState.redDirect) newCardState.yellows = 0; // Opcional: regla de negocio (roja directa anula amarillas)
-
-    onEdit({
-      cardEdits: {
-        ...editData.cardEdits,
-        [playerId]: newCardState,
-      },
-    });
+    if (newCardState.redDirect) newCardState.yellows = 0;
+    onEdit({ cardEdits: { ...editData.cardEdits, [playerId]: newCardState } });
   };
 
   const renderPlayerRow = (player: Player) => {
@@ -506,7 +544,6 @@ function TarjetasModal({
       redDirect: false,
     };
     const getsRed = state.redDirect || state.yellows === 2;
-
     return (
       <tr key={player.id} className={getsRed ? "table-danger" : ""}>
         <td>{player.nombre}</td>
@@ -517,7 +554,7 @@ function TarjetasModal({
             onChange={(e) =>
               handleCardChange(player.id, "yellows", e.target.value)
             }
-            disabled={state.redDirect} // Deshabilitar si ya tiene roja directa
+            disabled={state.redDirect}
           >
             <option value={0}>0</option>
             <option value={1}>1</option>
@@ -533,7 +570,7 @@ function TarjetasModal({
             onChange={(e) =>
               handleCardChange(player.id, "redDirect", e.target.checked)
             }
-            disabled={state.yellows === 2} // Deshabilitar si ya tiene 2 amarillas
+            disabled={state.yellows === 2}
           />
         </td>
       </tr>
@@ -554,7 +591,6 @@ function TarjetasModal({
         </Modal.Header>
         <Modal.Body>
           <div className="row">
-            {/* Columna Equipo Local */}
             <div className="col-md-6">
               <h5>{teamsMap.get(match.homeTeamId)} (Local)</h5>
               <Table responsive hover variant="dark" size="sm" className="mt-2">
@@ -578,8 +614,6 @@ function TarjetasModal({
                 </tbody>
               </Table>
             </div>
-
-            {/* Columna Equipo Visitante */}
             <div className="col-md-6 border-start">
               <h5>{teamsMap.get(match.awayTeamId)} (Visitante)</h5>
               <Table responsive hover variant="dark" size="sm" className="mt-2">
@@ -614,3 +648,172 @@ function TarjetasModal({
     </Modal>
   );
 }
+
+// ▼▼▼ NUEVO COMPONENTE: GolesModal ▼▼▼
+interface GolesModalProps {
+  show: boolean;
+  onHide: () => void;
+  match: Match;
+  allPlayersMap: Map<string, Player>;
+  editData: EditRow;
+  onEdit: (patch: Partial<EditRow>) => void;
+}
+
+function GolesModal({
+  show,
+  onHide,
+  match,
+  allPlayersMap,
+  editData,
+  onEdit,
+}: GolesModalProps) {
+  const [homePlayers, awayPlayers] = [
+    Array.from(allPlayersMap.values()).filter(
+      (p) => p.teamId === match.homeTeamId
+    ),
+    Array.from(allPlayersMap.values()).filter(
+      (p) => p.teamId === match.awayTeamId
+    ),
+  ];
+
+  const teamsMap = new Map();
+  teamsMap.set(
+    match.homeTeamId,
+    allPlayersMap.get(homePlayers[0]?.id)?.teamName ?? "Local"
+  );
+  teamsMap.set(
+    match.awayTeamId,
+    allPlayersMap.get(awayPlayers[0]?.id)?.teamName ?? "Visitante"
+  );
+
+  // Función para manejar el cambio en el input de goles
+  const handleGoalChange = (playerId: string, goals: string) => {
+    const newCount = Math.max(0, parseInt(goals, 10) || 0); // Asegura que sea un número >= 0
+
+    const newScorerEdits = { ...editData.scorerEdits };
+    if (newCount === 0) {
+      delete newScorerEdits[playerId]; // Limpiar si los goles son 0
+    } else {
+      newScorerEdits[playerId] = newCount;
+    }
+
+    onEdit({ scorerEdits: newScorerEdits });
+  };
+
+  const renderPlayerRow = (player: Player) => {
+    const goalCount = editData.scorerEdits[player.id] || 0;
+
+    return (
+      <tr key={player.id}>
+        <td>{player.nombre}</td>
+        <td style={{ width: "100px" }}>
+          <Form.Control
+            type="number"
+            size="sm"
+            min={0}
+            value={goalCount === 0 ? "" : goalCount} // Mostrar vacío si es 0
+            placeholder="0"
+            onChange={(e) => handleGoalChange(player.id, e.target.value)}
+          />
+        </td>
+      </tr>
+    );
+  };
+
+  // Calcular totales para validar
+  const homeGoals = parseInt(editData.homeScore, 10) || 0;
+  const awayGoals = parseInt(editData.awayScore, 10) || 0;
+  const totalGoals = homeGoals + awayGoals;
+  const assignedGoals = Object.values(editData.scorerEdits).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
+  return (
+    <Modal show={show} onHide={onHide} centered size="lg">
+      <div className="modal-content bg-dark text-white">
+        <Modal.Header>
+          <Modal.Title>Registrar Goleadores</Modal.Title>
+          <button
+            type="button"
+            className="btn-close btn-close-white"
+            onClick={onHide}
+            aria-label="Close"
+          ></button>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="alert alert-info">
+            Marcador:{" "}
+            <strong>
+              {homeGoals} - {awayGoals}
+            </strong>{" "}
+            (Total: {totalGoals} Goles)
+            <br />
+            Goles Asignados: <strong>{assignedGoals}</strong>
+            {totalGoals !== assignedGoals && (
+              <span className="text-danger d-block fw-bold">
+                ¡Los goles asignados no coinciden con el marcador!
+              </span>
+            )}
+          </div>
+
+          <div className="row">
+            {/* Columna Equipo Local */}
+            <div className="col-md-6">
+              <h5>{teamsMap.get(match.homeTeamId)} (Local)</h5>
+              <Table responsive hover variant="dark" size="sm" className="mt-2">
+                <thead>
+                  <tr>
+                    <th>Jugador</th>
+                    <th>Goles</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {homePlayers.length > 0 ? (
+                    homePlayers.map(renderPlayerRow)
+                  ) : (
+                    <tr>
+                      <td colSpan={2} className="text-muted text-center">
+                        No hay jugadores registrados.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+
+            {/* Columna Equipo Visitante */}
+            <div className="col-md-6 border-start">
+              <h5>{teamsMap.get(match.awayTeamId)} (Visitante)</h5>
+              <Table responsive hover variant="dark" size="sm" className="mt-2">
+                <thead>
+                  <tr>
+                    <th>Jugador</th>
+                    <th>Goles</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {awayPlayers.length > 0 ? (
+                    awayPlayers.map(renderPlayerRow)
+                  ) : (
+                    <tr>
+                      <td colSpan={2} className="text-muted text-center">
+                        No hay jugadores registrados.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={onHide}>
+            Aceptar
+          </Button>
+        </Modal.Footer>
+      </div>
+    </Modal>
+  );
+}
+// ▲▲▲ FIN ▲▲▲

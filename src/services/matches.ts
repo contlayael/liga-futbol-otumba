@@ -17,20 +17,26 @@ export type MatchStatus = "scheduled" | "finished";
 
 export interface NewMatch {
   fuerza: Fuerza;
-  round: number;        // jornada
-  matchDate: string;    // "YYYY-MM-DD"
-  time: string;         // "HH:MM"
+  round: number; // jornada
+  matchDate: string; // "YYYY-MM-DD"
+  time: string; // "HH:MM"
   field: string;
   homeTeamId: string;
   awayTeamId: string;
-  status: MatchStatus;  // "scheduled" al crear
+  status: MatchStatus; // "scheduled" al crear
   homeScore?: number;
   awayScore?: number;
-  // Metadata opcional para W.O. (por si luego tu cliente lo pide)
-  woTeamId?: string | null; // equipo que NO se presentó (si aplica)
-  // Guardaremos solo los IDs de los jugadores
+  woTeamId?: string | null;
   yellowCardCount?: { [playerId: string]: number };
   redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
+
+  // ▼▼▼ CAMPO AÑADIDO ▼▼▼
+  /**
+   * Objeto que mapea un playerId al NÚMERO de goles que anotó en este partido.
+   * Ejemplo: { "player-abc": 3, "player-xyz": 1 }
+   */
+  scorers?: { [playerId: string]: number };
+  // ▲▲▲ FIN ▲▲▲
 }
 
 export interface Match extends NewMatch {
@@ -67,7 +73,8 @@ export async function listMatchesByDateAndFuerza(
     where("matchDate", "==", matchDate)
   );
   const snap = await getDocs(q);
-  const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
+  const arr =
+    snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
   arr.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
   return arr;
 }
@@ -84,7 +91,8 @@ export function subscribeMatchesByDateAndFuerza(
     where("matchDate", "==", matchDate)
   );
   const unsub = onSnapshot(q, (snap) => {
-    const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
+    const arr =
+      snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
     arr.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
     cb(arr);
   });
@@ -102,28 +110,26 @@ export function subscribeFinishedMatchesByFuerza(
     where("status", "==", "finished")
   );
   const unsub = onSnapshot(q, (snap) => {
-    const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
+    const arr =
+      snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Match[];
     cb(arr);
   });
   return unsub;
 }
 
 // 🔧 Actualizar marcador (normal o W.O.)
-/**
- * Actualiza el marcador y las tarjetas de un partido.
- * Esta función es llamada por el DashboardArbitro.
- */
 export async function updateMatchScore(
   matchId: string,
   payload: {
     homeScore: number;
     awayScore: number;
-    status?: MatchStatus; // por defecto "finished"
-    woTeamId?: string | null; // opcional
-    
-    // Tipos actualizados para coincidir con la nueva estructura
+    status?: MatchStatus;
+    woTeamId?: string | null;
     yellowCardCount?: { [playerId: string]: number };
     redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
+    // ▼▼▼ CAMPO AÑADIDO ▼▼▼
+    scorers?: { [playerId: string]: number };
+    // ▲▲▲ FIN ▲▲▲
   }
 ) {
   const ref = doc(db, "matches", matchId);
@@ -132,10 +138,11 @@ export async function updateMatchScore(
     awayScore: payload.awayScore,
     status: payload.status ?? "finished",
     woTeamId: payload.woTeamId ?? null,
-    
-    // Guardamos los nuevos objetos/mapas
     yellowCardCount: payload.yellowCardCount ?? {},
     redCardReason: payload.redCardReason ?? {},
+    // ▼▼▼ LÍNEA AÑADIDA ▼▼▼
+    scorers: payload.scorers ?? {},
+    // ▲▲▲ FIN ▲▲▲
   });
 }
 
