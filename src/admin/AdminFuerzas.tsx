@@ -1,4 +1,4 @@
-// src/admin/AdminFuerzas.tsx (Corregido)
+// src/admin/AdminFuerzas.tsx (Corregido y Restaurado)
 
 import { useEffect, useMemo, useState } from "react";
 // ===> Añadido Link para el botón de Sanciones
@@ -36,21 +36,18 @@ type Row = {
 
 const FUERZAS: Fuerza[] = ["1ra", "2da", "3ra"];
 
-// ===> PASO 1: Función para obtener la fecha de hoy en formato YYYY-MM-DD
 function toYMD(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 const TODAY_DATE = toYMD(new Date());
 
-// ===> PASO 2: Constante y función para la jornada
 const LIGA_LAST_JORNADA_KEY = "liga_admin_last_jornada";
 
 const getInitialRoundState = (): number => {
   const savedJornada = localStorage.getItem(LIGA_LAST_JORNADA_KEY);
   return savedJornada ? parseInt(savedJornada, 10) : 1;
 };
-// ===> FIN DE PASO 2
 
 const genId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -79,14 +76,13 @@ export default function AdminFuerzas() {
     "3ra": "",
   });
 
-  // ===> CORRECCIÓN: Fecha usa la constante TODAY_DATE
   const [matchDate, setMatchDate] = useState<Record<Fuerza, string>>({
     "1ra": TODAY_DATE,
     "2da": TODAY_DATE,
     "3ra": TODAY_DATE,
   });
 
-  // ===> CORRECCIÓN: 'round' ahora es un NÚMERO y usa la función de localStorage
+  // 'round' es un NÚMERO
   const [round, setRound] = useState<number>(getInitialRoundState());
 
   const [rows, setRows] = useState<Record<Fuerza, Row[]>>({
@@ -111,7 +107,7 @@ export default function AdminFuerzas() {
   const [info, setInfo] = useState<string>("");
   const [err, setErr] = useState<string>("");
 
-  // ... (Estados de Modales sin cambios) ...
+  // Estados de Modales (Variables que SÍ se usan)
   const [showBaseline, setShowBaseline] = useState(false);
   const [teamBL, setTeamBL] = useState<Team | null>(null);
   const [bRound, setBRound] = useState(6);
@@ -121,8 +117,8 @@ export default function AdminFuerzas() {
   const [bP, setBP] = useState(0);
   const [bGF, setBGF] = useState(0);
   const [bGC, setBGC] = useState(0);
-  const bDG = bGF - bGC;
-  const bPts = bG * 3 + bE;
+  const bDG = bGF - bGC; // <--- SÍ se usa en el modal
+  const bPts = bG * 3 + bE; // <--- SÍ se usa en el modal
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
@@ -138,7 +134,7 @@ export default function AdminFuerzas() {
   const [playerRegistroId, setPlayerRegistroId] = useState("");
   const [playerPhoto, setPlayerPhoto] = useState<File | null>(null);
 
-  // ... (Funciones de Modales sin cambios) ...
+  // Funciones de Modales (Funciones que SÍ se usan)
   function openEditModal(team: Team) {
     setTeamToEdit(team);
     setEditedName(team.nombre);
@@ -149,6 +145,7 @@ export default function AdminFuerzas() {
     setShowDelete(true);
   }
   async function handleEdit() {
+    // <--- SÍ se usa en el modal
     if (!teamToEdit || !editedName.trim()) return;
     setLoading(true);
     try {
@@ -165,6 +162,7 @@ export default function AdminFuerzas() {
     }
   }
   async function handleDelete() {
+    // <--- SÍ se usa en el modal
     if (!teamToDelete) return;
     setLoading(true);
     try {
@@ -202,6 +200,7 @@ export default function AdminFuerzas() {
     setShowBaseline(true);
   }
   async function saveBaseline() {
+    // <--- SÍ se usa en el modal
     if (!teamBL) return;
     if (bPJ !== bG + bE + bP) {
       setErr("La suma G + E + P debe ser igual a PJ.");
@@ -232,15 +231,14 @@ export default function AdminFuerzas() {
     }
   }
 
-  // ===> CORRECCIÓN: Este useEffect ahora funciona porque 'round' es un número
+  // useEffect para guardar la jornada (Corregido)
   useEffect(() => {
-    // Si la jornada es un número válido, la guardamos.
     if (round > 0) {
       localStorage.setItem(LIGA_LAST_JORNADA_KEY, String(round));
     }
-  }, [round]); // Este efecto se dispara cada vez que 'round' cambia
+  }, [round]);
 
-  // UseEffect Cargar Equipos (sin cambios)
+  // useEffect Cargar Equipos (sin cambios)
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -258,7 +256,7 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey]);
 
-  // UseEffect Cargar Partidos (sin cambios)
+  // useEffect Cargar Partidos (sin cambios)
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -331,23 +329,21 @@ export default function AdminFuerzas() {
     }));
   }
 
-  // ===> CORRECCIÓN: 'jornada' ahora es un 'number' y funciona en 'round'
+  // saveSchedule (Corregido)
   async function saveSchedule(fuerza: Fuerza) {
     if (equipos[fuerza].length === 0) {
       setErr("Primero agrega equipos en esta fuerza.");
       return;
     }
-
     const date = matchDate[fuerza];
-    const jornada = round; // <--- Ahora 'round' es un 'number'
-
+    const jornada = round; // 'round' es un number
     const toSave = rows[fuerza]
       .map((r) => ({
         fuerza,
-        round: jornada,
+        round: jornada, // Asignación válida
         matchDate: date,
         time: r.time.trim(),
-        field: r.field.trim(), // <--- Esto ahora es VÁLIDO
+        field: r.field.trim(),
         homeTeamId: r.homeTeamId,
         awayTeamId: r.awayTeamId,
         status: "scheduled" as const,
@@ -387,7 +383,6 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-  // ===> FIN DE CORRECCIÓN
 
   // ... (handleDeleteMatch, handleRegisterPlayer no cambian) ...
   async function handleDeleteMatch(fuerza: Fuerza, matchId: string) {
@@ -504,7 +499,7 @@ export default function AdminFuerzas() {
               fill
               className="mb-4"
             >
-              {/* ... (Sub-pestaña 1: Equipos - sin cambios) ... */}
+              {/* --- Sub-pestaña 1: Equipos --- */}
               <Tab eventKey="equipos" title="Administrar Equipos">
                 <div className="card card-theme mb-4">
                   <div className="card-body">
@@ -605,25 +600,25 @@ export default function AdminFuerzas() {
                         <small>Ej: 2025-09-21 (domingo)</small>
                       </div>
 
-                      {/* ===> CORRECCIÓN: Input de Jornada */}
+                      {/* Input de Jornada (Corregido) */}
                       <div className="col-sm-4 col-md-2">
                         <label className="form-label">Jornada</label>
                         <input
                           type="number"
                           className="form-control"
                           min={1}
-                          value={round} // Usa el estado 'round' (number)
-                          onChange={
-                            (e) => setRound(parseInt(e.target.value || "1", 10)) // Actualiza el estado 'round' (number)
+                          value={round}
+                          onChange={(e) =>
+                            setRound(parseInt(e.target.value || "1", 10))
                           }
                         />
                       </div>
-                      {/* ===> FIN DE CORRECCIÓN */}
                     </div>
                     <hr style={{ borderColor: "var(--color-border)" }} />
                     <h6 className="mb-2">Agregar partidos</h6>
                     {rows[fuerza].map((r) => (
                       <div className="row g-2 align-items-end mb-2" key={r.id}>
+                        {/* ... (inputs de partido) ... */}
                         <div className="col-lg-3">
                           <label className="form-label">Local</label>
                           <select
@@ -779,7 +774,7 @@ export default function AdminFuerzas() {
                 </div>
               </Tab>
 
-              {/* ... (Sub-pestaña 3: Jugadores - sin cambios) ... */}
+              {/* --- Sub-pestaña 3: Jugadores --- */}
               <Tab eventKey="jugadores" title="Registrar Jugadores">
                 <div className="card card-theme mb-4">
                   <div className="card-body">
@@ -787,6 +782,7 @@ export default function AdminFuerzas() {
                       Registrar Jugadores en {fuerza} Fuerza
                     </h5>
                     <div className="row g-3">
+                      {/* ... (Inputs de registro de jugador) ... */}
                       <div className="col-md-4">
                         <label className="form-label">Equipo</label>
                         <select
@@ -879,24 +875,189 @@ export default function AdminFuerzas() {
         ))}
       </Tabs>
 
-      {/* ... (Todos los modales al final, sin cambios) ... */}
+      {/* ▼▼▼ CÓDIGO DEL MODAL RESTAURADO ▼▼▼ */}
+
+      {/* Baseline Modal */}
       <Modal show={showBaseline} onHide={() => setShowBaseline(false)} centered>
         <div className="modal-content p-2">
-          {/* ... (contenido modal) ... */}
+          <div className="modal-header">
+            <h5 className="modal-title">
+              Baseline · {teamBL?.nombre} ({teamBL?.fuerza} fuerza)
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowBaseline(false)}
+            />
+          </div>
+          <div className="modal-body">
+            <div className="row g-2">
+              <div className="col-6 col-md-3">
+                <label className="form-label">Jornada incluida</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bRound}
+                  min={0}
+                  onChange={(e) =>
+                    setBRound(parseInt(e.target.value || "0", 10))
+                  }
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">PJ</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bPJ}
+                  min={0}
+                  onChange={(e) => setBPJ(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">G</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bG}
+                  min={0}
+                  onChange={(e) => setBG(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">E</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bE}
+                  min={0}
+                  onChange={(e) => setBE(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">P</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bP}
+                  min={0}
+                  onChange={(e) => setBP(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">GF</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bGF}
+                  min={0}
+                  onChange={(e) => setBGF(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">GC</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={bGC}
+                  min={0}
+                  onChange={(e) => setBGC(parseInt(e.target.value || "0", 10))}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">DG</label>
+                <input className="form-control" value={bDG} disabled />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">Pts</label>
+                <input className="form-control" value={bPts} disabled />
+              </div>
+            </div>
+            <small className="text-muted d-block mt-2">
+              La baseline aplica hasta la jornada indicada...
+            </small>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowBaseline(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-success"
+              onClick={saveBaseline}
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
         </div>
       </Modal>
 
+      {/* Modal editar */}
       <Modal show={showEdit} onHide={() => setShowEdit(false)} centered>
         <div className="modal-content p-3">
-          {/* ... (contenido modal) ... */}
+          <div className="modal-header">
+            <h5 className="modal-title">Editar nombre de equipo</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowEdit(false)}
+            />
+          </div>
+          <div className="modal-body">
+            <input
+              className="form-control"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              placeholder="Nuevo nombre"
+            />
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowEdit(false)}
+            >
+              Cancelar
+            </button>
+            <button className="btn btn-primary" onClick={handleEdit}>
+              Guardar
+            </button>
+          </div>
         </div>
       </Modal>
 
+      {/* Modal eliminar */}
       <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
         <div className="modal-content p-3">
-          {/* ... (contenido modal) ... */}
+          <div className="modal-header">
+            <h5 className="modal-title text-danger">¿Eliminar equipo?</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowDelete(false)}
+            />
+          </div>
+          <div className="modal-body">
+            ¿Estás seguro que deseas eliminar el equipo{" "}
+            <strong>{teamToDelete?.nombre}</strong>? Esta acción no se puede
+            deshacer.
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowDelete(false)}
+            >
+              Cancelar
+            </button>
+            <button className="btn btn-danger" onClick={handleDelete}>
+              Eliminar
+            </button>
+          </div>
         </div>
       </Modal>
+      {/* ▲▲▲ FIN DEL CÓDIGO RESTAURADO ▲▲▲ */}
     </>
   );
 }
