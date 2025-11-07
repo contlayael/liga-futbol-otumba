@@ -118,3 +118,115 @@ body {
   color: var(--color-text-primary) !important;
   background-color: var(--color-border) !important;
 }
+
+/* 7. ESTILOS DEL CARRUSEL RESPONSIVO */
+
+/* Define la altura para el item del carrusel */
+.carousel-item-responsive {
+  height: 500px; /* Altura para escritorio */
+  background-color: var(--color-bg-dark); /* Color de fondo por si la imagen tarda */
+}
+
+/* Estilos para la imagen dentro del carrusel */
+.carousel-img-responsive {
+  /* ESTAS TRES LÍNEAS SON LA SOLUCIÓN: */
+  height: 100%;           /* Ocupa el 100% de la altura del item (500px) */
+  object-fit: cover;     /* Recorta la imagen para rellenar el espacio, sin estirarla */
+  width: 100%;
+  
+  opacity: 0.8;      /* Le da un tono más oscuro */
+}
+
+/* Estilos para el texto (caption) */
+.carousel-caption-responsive {
+  /* Usamos variables CSS para el fondo en lugar de clases de Bootstrap */
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  
+  /* Centrado y posicionamiento */
+  bottom: 1.25rem;
+  left: 15%;
+  right: 15%;
+}
+
+/* --- Media Query para Móviles --- */
+@media (max-width: 768px) {
+  .carousel-item-responsive {
+    height: 300px; /* Altura más pequeña para móviles */
+  }
+
+  .carousel-caption-responsive {
+    /* Más pequeño y más abajo en móviles */
+    padding: 0.5rem;
+    bottom: 0.5rem;
+    left: 5%;
+    right: 5%;
+  }
+  
+  .carousel-caption-responsive h3 {
+    font-size: 1.25rem; /* Título más pequeño en móvil */
+  }
+}
+/* ... (Todo tu CSS existente: :root, body, cards, etc.) ... */
+
+
+/* ▼▼▼ REEMPLAZAR LA SECCIÓN 8 CON ESTO ▼▼▼ */
+
+/* 8. Estilos de Tabla General Profesional (Tema Claro) */
+
+/* Contenedor de la tabla */
+.table-professional {
+  /* Le damos bordes redondeados */
+  border-radius: 0.75rem;
+  overflow: hidden; /* Importante para que los bordes redondeados corten la tabla */
+  border-collapse: separate; /* Necesario para que 'overflow: hidden' funcione bien */
+  border-spacing: 0;
+  
+  /* Quitamos el borde por defecto de table-light */
+  border: none !important; 
+}
+
+/* Encabezado: Usamos el color de fondo de tarjeta (oscuro) */
+.table-professional .thead-dark-professional th {
+  background-color: var(--color-bg-medium) !important;
+  color: var(--color-text-secondary) !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  border-bottom: none !important; /* Quitamos bordes */
+}
+
+/* Cuerpo de la Tabla */
+.table-professional tbody {
+  /* El color del texto principal en la tabla clara debe ser oscuro */
+  color: #333; 
+}
+
+/* Filas "Striped" */
+.table-light.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: #f8f9fa; /* Un gris muy claro para filas impares */
+}
+.table-light.table-striped > tbody > tr:nth-of-type(even) > * {
+  background-color: #ffffff; /* Blanco para filas pares */
+}
+
+/* Color de los Puntos (Pts) */
+.text-primary-custom {
+  color: var(--color-primary) !important;
+}
+
+/* Color de los enlaces del Club */
+.team-link {
+  color: var(--color-bg-dark) !important; /* Color de texto oscuro */
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.team-link:hover {
+  color: var(--color-primary) !important;
+  text-decoration: underline;
+}
+
+/* --- Fin de Estilos de Tabla --- */

@@ -1,3 +1,5 @@
+// src/pages/Inicio.tsx (Actualizado con imágenes locales)
+
 import { Carousel, Container } from "react-bootstrap";
 
 export default function Inicio() {
@@ -5,31 +7,31 @@ export default function Inicio() {
     <div className="inicio-page">
       {/* Carrusel Principal */}
       <Carousel className="mb-5">
-        {/* --- Item 1 --- */}
-        {/* Estilos en línea eliminados, 'className' añadido */}
+        {/* --- Item 1 (Otompa) --- */}
         <Carousel.Item className="carousel-item-responsive">
           <img
-            className="d-block w-100 h-100 carousel-img-responsive" // 'className' añadido
-            src="https://placehold.co/1920x600/0f172a/ffffff?text=Bienvenidos+a+la+Liga+de+Otumba"
-            alt="Bienvenidos"
-            // Estilos en línea eliminados
+            className="d-block w-100 h-100 carousel-img-responsive"
+            // ▼▼▼ CAMBIO AQUÍ ▼▼▼
+            src="/images/otompa.jpeg"
+            alt="Vista de Otumba"
+            // ▲▲▲ FIN ▲▲▲
           />
-          {/* Clases de Bootstrap eliminadas, 'className' añadido */}
           <Carousel.Caption className="carousel-caption-responsive">
-            <h3>Gran Inicio de Temporada</h3>
-            {/* Clase de Bootstrap para ocultar en móvil pequeño */}
+            <h3>Bienvenidos a la Liga de Otumba</h3>
             <p className="d-none d-sm-block">
-              Sigue de cerca a tu equipo favorito en este nuevo torneo.
+              Gran Inicio de Temporada. Sigue de cerca a tu equipo favorito.
             </p>
           </Carousel.Caption>
         </Carousel.Item>
 
-        {/* --- Item 2 --- */}
+        {/* --- Item 2 (Arbitros) --- */}
         <Carousel.Item className="carousel-item-responsive">
           <img
             className="d-block w-100 h-100 carousel-img-responsive"
-            src="https://placehold.co/1920x600/1e293b/ffffff?text=Juego+Limpio"
-            alt="Juego Limpio"
+            // ▼▼▼ CAMBIO AQUÍ ▼▼▼
+            src="/images/arbitros.jpeg"
+            alt="Árbitros del torneo"
+            // ▲▲▲ FIN ▲▲▲
           />
           <Carousel.Caption className="carousel-caption-responsive">
             <h3>Juego Limpio</h3>
@@ -40,18 +42,20 @@ export default function Inicio() {
           </Carousel.Caption>
         </Carousel.Item>
 
-        {/* --- Item 3 --- */}
+        {/* --- Item 3 (Holanda) --- */}
         <Carousel.Item className="carousel-item-responsive">
           <img
             className="d-block w-100 h-100 carousel-img-responsive"
-            src="https://placehold.co/1920x600/334155/ffffff?text=Inscripciones+Abiertas"
-            alt="Inscripciones"
+            // ▼▼▼ CAMBIO AQUÍ ▼▼▼
+            src="/images/holanda.jpeg"
+            alt="Equipo de la liga"
+            // ▲▲▲ FIN ▲▲▲
           />
           <Carousel.Caption className="carousel-caption-responsive">
-            <h3>¿Quieres participar?</h3>
+            <h3>Inscripciones Abiertas</h3>
             <p className="d-none d-sm-block">
-              Consulta las bases para inscribir a tu equipo en el próximo
-              torneo.
+              ¿Quieres participar? Consulta las bases para inscribir a tu
+              equipo.
             </p>
           </Carousel.Caption>
         </Carousel.Item>

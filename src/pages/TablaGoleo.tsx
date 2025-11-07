@@ -1,6 +1,10 @@
-// src/pages/TablaGoleo.tsx
+// src/pages/TablaGoleo.tsx (Actualizado con Tabla Clara)
+
 import { useEffect, useMemo, useState } from "react";
+// ▼▼▼ Importar Link ▼▼▼
 import { Tabs, Tab, Table } from "react-bootstrap";
+import { Link } from "react-router-dom";
+// ▲▲▲ Fin ▲▲▲
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
 import {
@@ -12,33 +16,32 @@ import { type Fuerza } from "../services/teams";
 
 const FUERZAS: Fuerza[] = ["1ra", "2da", "3ra"];
 
-// Interface para el ranking
+// ▼▼▼ Interfaz actualizada para incluir teamId para el enlace ▼▼▼
 interface ScorerRank {
   playerId: string;
   playerName: string;
+  teamId: string; // <-- AÑADIDO
   teamName: string;
   fuerza: Fuerza;
   goals: number;
 }
+// ▲▲▲ Fin ▲▲▲
 
 export default function TablaGoleo() {
   const [activeTab, setActiveTab] = useState<Fuerza>("1ra");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 1. Un mapa con TODOS los jugadores (id -> Player)
   const [allPlayersMap, setAllPlayersMap] = useState<Map<string, Player>>(
     new Map()
   );
-
-  // 2. Partidos finalizados, separados por fuerza
   const [matches, setMatches] = useState<Record<Fuerza, Match[]>>({
     "1ra": [],
     "2da": [],
     "3ra": [],
   });
 
-  // Cargar TODOS los jugadores una sola vez
+  // Cargar TODOS los jugadores (sin cambios)
   useEffect(() => {
     setLoading(true);
     (async () => {
@@ -46,6 +49,7 @@ export default function TablaGoleo() {
         const snap = await getDocs(collection(db, "players"));
         const m = new Map<string, Player>();
         snap.docs.forEach((d) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           m.set(d.id, { id: d.id, ...(d.data() as any) } as Player);
         });
         setAllPlayersMap(m);
@@ -56,9 +60,9 @@ export default function TablaGoleo() {
     })();
   }, []);
 
-  // Suscribirse a los partidos finalizados de CADA fuerza
+  // Suscribirse a los partidos (sin cambios)
   useEffect(() => {
-    if (allPlayersMap.size === 0) return; // Esperar a que los jugadores carguen
+    if (allPlayersMap.size === 0) return;
 
     setLoading(true);
     try {
@@ -74,9 +78,9 @@ export default function TablaGoleo() {
       setError("No se pudieron cargar los partidos.");
       setLoading(false);
     }
-  }, [allPlayersMap]); // Depende de que allPlayersMap esté cargado
+  }, [allPlayersMap]);
 
-  // 3. Calcular el ranking (se recalcula si cambian los jugadores o partidos)
+  // Calcular el ranking (actualizado para incluir teamId)
   const ranking = useMemo(() => {
     const allScorers: Record<Fuerza, ScorerRank[]> = {
       "1ra": [],
@@ -85,43 +89,37 @@ export default function TablaGoleo() {
     };
     const goalMap: { [playerId: string]: ScorerRank } = {};
 
-    // Iterar por cada fuerza
     for (const f of FUERZAS) {
-      // Iterar sobre cada partido de esa fuerza
       for (const match of matches[f]) {
-        if (!match.scorers) continue; // Saltar si no hay goleadores
+        if (!match.scorers) continue;
 
-        // Iterar sobre cada goleador en el partido
         for (const [playerId, goals] of Object.entries(match.scorers)) {
           if (goals === 0) continue;
 
-          // Si es la primera vez que vemos a este jugador
           if (!goalMap[playerId]) {
             const player = allPlayersMap.get(playerId);
-            if (!player) continue; // Jugador no encontrado (raro)
+            if (!player) continue;
 
             goalMap[playerId] = {
               playerId: player.id,
               playerName: player.nombre,
+              teamId: player.teamId, // <-- AÑADIDO
               teamName: player.teamName,
               fuerza: player.fuerza,
               goals: 0,
             };
           }
-          // Sumar los goles
           goalMap[playerId].goals += goals;
         }
       }
     }
 
-    // Clasificar a los jugadores en sus respectivas fuerzas
     for (const scorer of Object.values(goalMap)) {
       if (allScorers[scorer.fuerza]) {
         allScorers[scorer.fuerza].push(scorer);
       }
     }
 
-    // Ordenar cada ranking por goles (descendente)
     for (const f of FUERZAS) {
       allScorers[f].sort((a, b) => b.goals - a.goals);
     }
@@ -143,38 +141,53 @@ export default function TablaGoleo() {
       >
         {FUERZAS.map((fuerza) => (
           <Tab eventKey={fuerza} title={`${fuerza} Fuerza`} key={fuerza}>
-            <div className="card card-theme">
-              <div className="card-body">
-                <Table responsive striped hover variant="dark">
-                  <thead>
+            {/* ▼▼▼ SE ELIMINA EL DIV .card .card-theme ▼▼▼ */}
+            <div className="table-responsive">
+              <Table className="table-light table-striped table-hover align-middle table-professional">
+                <thead className="thead-dark-professional">
+                  {/* ▼▼▼ CABECERA ACTUALIZADA ▼▼▼ */}
+                  <tr>
+                    <th className="text-center" style={{ width: "5%" }}>
+                      #
+                    </th>
+                    <th className="text-start">Jugador</th>
+                    <th className="text-start">Equipo</th>
+                    <th className="text-center">Goles</th>
+                  </tr>
+                  {/* ▲▲▲ FIN ▲▲▲ */}
+                </thead>
+                <tbody>
+                  {ranking[fuerza].length === 0 ? (
                     <tr>
-                      <th>#</th>
-                      <th>Jugador</th>
-                      <th>Equipo</th>
-                      <th>Goles</th>
+                      <td colSpan={4} className="text-center text-muted">
+                        Aún no hay goles registrados en esta fuerza.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {ranking[fuerza].length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="text-center text-white">
-                          Aún no hay goles registrados en esta fuerza.
+                  ) : (
+                    ranking[fuerza].map((scorer, index) => (
+                      <tr key={scorer.playerId}>
+                        <td className="text-center fw-bold">{index + 1}</td>
+                        <td className="text-start">{scorer.playerName}</td>
+                        {/* ▼▼▼ EQUIPO CON ENLACE ▼▼▼ */}
+                        <td className="text-start">
+                          <Link
+                            to={`/registros/${scorer.teamId}`}
+                            className="team-link"
+                          >
+                            {scorer.teamName}
+                          </Link>
+                        </td>
+                        {/* ▲▲▲ FIN ▲▲▲ */}
+                        <td className="text-center fw-bold fs-5 text-primary-custom">
+                          {scorer.goals}
                         </td>
                       </tr>
-                    ) : (
-                      ranking[fuerza].map((scorer, index) => (
-                        <tr key={scorer.playerId}>
-                          <td className="fw-bold">{index + 1}</td>
-                          <td>{scorer.playerName}</td>
-                          <td>{scorer.teamName}</td>
-                          <td className="fw-bold fs-5">{scorer.goals}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </Table>
             </div>
+            {/* ▲▲▲ FIN DE CAMBIOS ▲▲▲ */}
           </Tab>
         ))}
       </Tabs>
