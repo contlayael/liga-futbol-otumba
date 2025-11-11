@@ -3,6 +3,8 @@ import {
   collection,
   doc,
   getDocs,
+  onSnapshot,
+  orderBy,
   query,
   updateDoc,
   where,
@@ -97,6 +99,7 @@ export async function getActiveSuspensionsByFuerza(
   );
   const snap = await getDocs(q);
   const suspensions = snap.docs.map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (d) => ({ id: d.id, ...(d.data() as any) } as Suspension)
   );
   // Ordenar por jornada de ofensa, la más reciente primero
@@ -121,7 +124,36 @@ export async function getActiveSuspensionForPlayer(
     return null;
   }
   // Un jugador solo debería tener una sanción activa a la vez
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { id: snap.docs[0].id, ...(snap.docs[0].data() as any) } as Suspension;
+}
+
+// ▼▼▼ FUNCIÓN MODIFICADA ▼▼▼
+/**
+ * Se suscribe a TODAS las sanciones activas (de todas las fuerzas).
+ */
+export function subscribeToAllActiveSuspensions(
+  cb: (suspensions: Suspension[]) => void
+): () => void {
+  
+  // CORRECCIÓN: Se elimina el 'orderBy("fuerza")'.
+  // Esta consulta SÍ funcionará con el índice que ya creaste.
+  const q = query(
+    collection(db, "suspensions"),
+    where("status", "==", "Active"),
+    orderBy("createdAt", "desc")
+  );
+  // ▲▲▲ FIN DE CORRECIÓN ▲▲▲
+
+  const unsub = onSnapshot(q, (snap) => {
+    const suspensions = snap.docs.map(
+      (d) => ({ id: d.id, ...(d.data() as any) } as Suspension)
+    );
+    // Ordenamos por fuerza aquí, en JavaScript, en lugar de en la DB
+    suspensions.sort((a, b) => a.fuerza.localeCompare(b.fuerza));
+    cb(suspensions);
+  });
+  return unsub;
 }
 
 /**

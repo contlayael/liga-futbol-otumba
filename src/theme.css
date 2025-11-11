@@ -1,44 +1,54 @@
+/* src/theme.css (Corregido) */
+
 /* 1. Importar la fuente profesional (Inter) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* 2. Definir la paleta de colores profesional */
 :root {
-  /* Paleta de Fondos y Superficies */
-  --color-bg-dark: #0F172A;     /* Azul-gris más oscuro (para el body) */
-  --color-bg-medium: #1E293B;   /* Azul-gris medio (para tarjetas, modales) */
-  
-  /* Paleta de Texto */
-  --color-text-primary: #F8FAFC;   /* Blanco suave (títulos, texto principal) */
-  --color-text-secondary: #94A3B8; /* Gris claro (subtítulos, texto silenciado) */
-  
-  /* Paleta de Acentos y Bordes */
-  --color-border: #334155;     /* Gris-azulado (para bordes sutiles) */
-  --color-primary: #3B82F6;     /* Azul vibrante (botones, links) */
-  --color-primary-hover: #2563EB; /* Azul más oscuro para hover */
-  --color-success: #10B981;     /* Verde "profesional" */
-  --color-danger: #EF4444;       /* Rojo */
-  --color-info: #0EA5E9;       /* Celeste */
-  --color-secondary: #64748B;   /* Gris para botones secundarios */
+  /* ... (paleta de colores sin cambios) ... */
+  --color-bg-dark: #0F172A;
+  --color-bg-medium: #1E293B;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-border: #334155;
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563EB;
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-info: #0EA5E9;
+  --color-secondary: #64748B;
 }
 
+/* ▼▼▼ MODIFICACIÓN AQUÍ ▼▼▼ */
 /* 3. Aplicar estilos base a la aplicación */
+
+html {
+  /* Aplicamos el color de fondo raíz al HTML */
+  background-color: var(--color-bg-dark) !important;
+}
+
 body {
   background-color: var(--color-bg-dark) !important;
   color: var(--color-text-primary) !important;
   font-family: 'Inter', sans-serif !important;
+  /* Asegura que el body siempre llene la altura de la pantalla */
+  min-height: 100vh;
 }
+/* ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ */
 
-/* 4. Sobrescribir componentes de Bootstrap */
+
+/* 4. Sobrescribir componentes generales de Bootstrap */
+/* ... (El resto del archivo CSS es idéntico) ... */
 
 /* --- Tarjetas (Cards) --- */
 .card.card-theme {
   background-color: var(--color-bg-medium);
   border: 1px solid var(--color-border);
-  border-radius: 0.75rem; /* Esquinas más redondeadas */
+  border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 .card.card-theme .card-body {
-  padding: 1.5rem; /* Más espacio interno */
+  padding: 1.5rem;
 }
 .card.card-theme .card-title,
 .card.card-theme h5,
@@ -118,115 +128,211 @@ body {
   color: var(--color-text-primary) !important;
   background-color: var(--color-border) !important;
 }
-
-/* 7. ESTILOS DEL CARRUSEL RESPONSIVO */
-
-/* Define la altura para el item del carrusel */
-.carousel-item-responsive {
-  height: 500px; /* Altura para escritorio */
-  background-color: var(--color-bg-dark); /* Color de fondo por si la imagen tarda */
+.btn-light {
+  background-color: var(--color-text-secondary) !important;
+  border-color: var(--color-text-secondary) !important;
+  color: var(--color-bg-dark) !important;
+  font-weight: 600;
+}
+.btn-light:hover {
+  background-color: var(--color-text-primary) !important;
+  border-color: var(--color-text-primary) !important;
 }
 
-/* Estilos para la imagen dentro del carrusel */
-.carousel-img-responsive {
-  /* ESTAS TRES LÍNEAS SON LA SOLUCIÓN: */
-  height: 100%;           /* Ocupa el 100% de la altura del item (500px) */
-  object-fit: cover;     /* Recorta la imagen para rellenar el espacio, sin estirarla */
-  width: 100%;
-  
-  opacity: 0.8;      /* Le da un tono más oscuro */
+/* --- Formularios --- */
+.form-control, .form-select {
+  background-color: var(--color-bg-dark) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: 0.5rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+.form-control::placeholder {
+  color: var(--color-text-secondary) !important;
 }
 
-/* Estilos para el texto (caption) */
-.carousel-caption-responsive {
-  /* Usamos variables CSS para el fondo en lugar de clases de Bootstrap */
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 1rem;
-  border-radius: 0.375rem;
-  
-  /* Centrado y posicionamiento */
-  bottom: 1.25rem;
-  left: 15%;
-  right: 15%;
+/* 5. Estilos de Componentes Específicos */
+
+/* --- Header / Barra de Navegación --- */
+.header-navbar {
+  background-color: var(--color-bg-dark) !important;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.header-navbar .navbar-brand .h5 {
+  color: var(--color-text-primary) !important;
+  font-weight: 600;
+}
+.header-navbar .navbar-toggler {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.5rem;
+}
+.header-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(248, 250, 252, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+.header-navbar .navbar-nav .nav-link {
+  color: var(--color-text-secondary) !important; 
+  font-weight: 500;
+  padding: 0.5rem 1rem !important; 
+  border-radius: 0.375rem; 
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+.header-navbar .navbar-nav .nav-link:hover {
+  color: var(--color-text-primary) !important; 
+  background-color: var(--color-bg-medium); 
+}
+.header-navbar .navbar-nav .nav-link.active {
+  color: var(--color-text-primary) !important;
+  font-weight: 600;
+  background-color: transparent; 
 }
 
-/* --- Media Query para Móviles --- */
-@media (max-width: 768px) {
-  .carousel-item-responsive {
-    height: 300px; /* Altura más pequeña para móviles */
-  }
-
-  .carousel-caption-responsive {
-    /* Más pequeño y más abajo en móviles */
-    padding: 0.5rem;
-    bottom: 0.5rem;
-    left: 5%;
-    right: 5%;
-  }
-  
-  .carousel-caption-responsive h3 {
-    font-size: 1.25rem; /* Título más pequeño en móvil */
-  }
+/* --- Breadcrumbs (Migas de Pan) --- */
+.breadcrumb-item a {
+  color: var(--color-primary) !important; 
+  text-decoration: none;
 }
-/* ... (Todo tu CSS existente: :root, body, cards, etc.) ... */
+.breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+.breadcrumb-item.active {
+  color: var(--color-text-primary) !important;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+  color: var(--color-text-secondary) !important;
+}
 
-
-/* ▼▼▼ REEMPLAZAR LA SECCIÓN 8 CON ESTO ▼▼▼ */
-
-/* 8. Estilos de Tabla General Profesional (Tema Claro) */
-
-/* Contenedor de la tabla */
+/* --- Tabla General Profesional (Tema Claro) --- */
 .table-professional {
-  /* Le damos bordes redondeados */
   border-radius: 0.75rem;
-  overflow: hidden; /* Importante para que los bordes redondeados corten la tabla */
-  border-collapse: separate; /* Necesario para que 'overflow: hidden' funcione bien */
+  overflow: hidden;
+  border-collapse: separate;
   border-spacing: 0;
-  
-  /* Quitamos el borde por defecto de table-light */
   border: none !important; 
 }
-
-/* Encabezado: Usamos el color de fondo de tarjeta (oscuro) */
 .table-professional .thead-dark-professional th {
   background-color: var(--color-bg-medium) !important;
   color: var(--color-text-secondary) !important;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
-  border-bottom: none !important; /* Quitamos bordes */
+  border-bottom: none !important;
 }
-
-/* Cuerpo de la Tabla */
 .table-professional tbody {
-  /* El color del texto principal en la tabla clara debe ser oscuro */
   color: #333; 
 }
-
-/* Filas "Striped" */
 .table-light.table-striped > tbody > tr:nth-of-type(odd) > * {
-  background-color: #f8f9fa; /* Un gris muy claro para filas impares */
+  background-color: #f8f9fa;
 }
 .table-light.table-striped > tbody > tr:nth-of-type(even) > * {
-  background-color: #ffffff; /* Blanco para filas pares */
+  background-color: #ffffff;
 }
-
-/* Color de los Puntos (Pts) */
 .text-primary-custom {
   color: var(--color-primary) !important;
 }
-
-/* Color de los enlaces del Club */
 .team-link {
-  color: var(--color-bg-dark) !important; /* Color de texto oscuro */
+  color: var(--color-bg-dark) !important; 
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
-
 .team-link:hover {
   color: var(--color-primary) !important;
   text-decoration: underline;
 }
 
-/* --- Fin de Estilos de Tabla --- */
+/* --- Carrusel Responsivo --- */
+.carousel-item-responsive {
+  height: 500px; 
+  background-color: var(--color-bg-dark);
+}
+.carousel-img-responsive {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+  opacity: 0.8;
+}
+.carousel-caption-responsive {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  bottom: 1.25rem;
+  left: 15%;
+  right: 15%;
+}
+
+/* --- Lista de Registros (Tema Claro) --- */
+.list-group-professional {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: none !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+.list-group-professional .list-group-item {
+  background-color: #ffffff;
+  color: var(--color-bg-dark);
+  font-weight: 500;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.25rem;
+}
+.list-group-professional .list-group-item-action {
+  background-color: #ffffff;
+  color: var(--color-bg-dark);
+  font-weight: 500;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.25rem;
+}
+.list-group-professional .list-group-item:last-child {
+  border-bottom: none;
+}
+.list-group-professional .list-group-item-action:last-child {
+  border-bottom: none;
+}
+.list-group-professional .list-group-item-action:hover {
+  background-color: #f8f9fa;
+  color: var(--color-primary);
+}
+
+
+/* 6. Estilos Responsivos (Media Queries) */
+
+/* --- Menú Móvil (Colapsado) --- */
+@media (max-width: 991.98px) {
+  .header-navbar .navbar-collapse {
+    background-color: var(--color-bg-medium);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+  .header-navbar .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+  }
+  .header-navbar .navbar-nav .nav-link.active {
+    background-color: var(--color-primary);
+    color: var(--color-text-primary) !important;
+  }
+  .header-navbar .navbar-nav .nav-link:hover {
+    background-color: var(--color-border);
+  }
+}
+
+/* --- Carrusel Móvil --- */
+@media (max-width: 768px) {
+  .carousel-item-responsive {
+    height: 300px;
+  }
+  .carousel-caption-responsive {
+    padding: 0.5rem;
+    bottom: 0.5rem;
+    left: 5%;
+    right: 5%;
+  }
+  .carousel-caption-responsive h3 {
+    font-size: 1.25rem;
+  }
+}

@@ -1,3 +1,5 @@
+// src/pages/Registros.tsx (Corregido)
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Tabs, Tab, Card } from "react-bootstrap";
@@ -14,7 +16,7 @@ const FUERZAS: Fuerza[] = ["1ra", "2da", "3ra"];
 function PlayerCard({ player }: { player: Player }) {
   return (
     <div className="col-md-4 col-sm-6 mb-4">
-      <Card className="h-100 bg-dark text-white shadow-sm rounded">
+      <Card className="h-100 card-theme shadow-sm rounded">
         <Card.Img
           variant="top"
           src={player.photoURL}
@@ -35,16 +37,16 @@ function PlayerCard({ player }: { player: Player }) {
         />
         <Card.Body>
           <Card.Title>{player.nombre}</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">
+          <Card.Subtitle className="mb-2">
             {player.teamName} ({player.fuerza} Fuerza)
           </Card.Subtitle>
-          <Card.Text>
+          <Card.Text className="text-white">
             <strong>ID Registro:</strong> {player.registroId} <br />
             <strong>Edad:</strong> {player.edad} años
           </Card.Text>
           <Link
             to={`/registros/${player.teamId}`}
-            className="btn btn-outline-light btn-sm text-w"
+            className="btn btn-outline-light btn-sm"
           >
             Ver Plantel Completo
           </Link>
@@ -53,6 +55,9 @@ function PlayerCard({ player }: { player: Player }) {
     </div>
   );
 }
+
+// ▼▼▼ 1. DEFINIMOS EL TIPO ESPECIÍFICO ▼▼▼
+type SearchType = "nombre" | "registroId";
 
 export default function Registros() {
   const [activeKey, setActiveKey] = useState<Fuerza>("1ra");
@@ -66,14 +71,13 @@ export default function Registros() {
 
   // Estados para la Búsqueda
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchType, setSearchType] = useState<"nombre" | "registroId">(
-    "nombre"
-  );
+  // ▼▼▼ 2. USAMOS NUESTRO TIPO ▼▼▼
+  const [searchType, setSearchType] = useState<SearchType>("nombre");
   const [searchResults, setSearchResults] = useState<Player[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [searchMessage, setSearchMessage] = useState("");
 
-  // Cargar equipos (para la vista de pestañas)
+  // Cargar equipos
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -107,7 +111,6 @@ export default function Registros() {
     try {
       let results: Player[] = [];
       if (searchType === "nombre") {
-        // Asumiendo que searchPlayersByName es sensible a mayúsculas, buscamos con la primera letra en mayúscula
         const searchTermCapitalized =
           searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1);
         results = await searchPlayersByName(searchTermCapitalized);
@@ -134,7 +137,7 @@ export default function Registros() {
       {err && <div className="alert alert-danger">{err}</div>}
 
       {/* Formulario de Búsqueda */}
-      <div className="card card-body bg-dark text-white border-secondary mb-4 p-4 rounded">
+      <div className="card card-theme mb-4 p-4 rounded">
         <h5 className="mb-3">Buscar Jugador en la Liga</h5>
         <div className="row g-2">
           <div className="col-md-6">
@@ -152,14 +155,16 @@ export default function Registros() {
             />
           </div>
           <div className="col-md-3">
+            {/* ▼▼▼ 3. CORREGIMOS EL 'onChange' ▼▼▼ */}
             <select
               className="form-select"
               value={searchType}
-              onChange={(e) => setSearchType(e.target.value as any)}
+              onChange={(e) => setSearchType(e.target.value as SearchType)}
             >
               <option value="nombre">Por Nombre</option>
               <option value="registroId">Por ID de Registro</option>
             </select>
+            {/* ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ */}
           </div>
           <div className="col-md-3">
             <button
@@ -204,22 +209,22 @@ export default function Registros() {
             className="mb-3 justify-content-center"
             fill
           >
-            {FUERZAS.map((fuerza) => (
+            {FUERZAS.map((fuerza: Fuerza) => (
               <Tab eventKey={fuerza} title={`${fuerza} Fuerza`} key={fuerza}>
                 {loading ? (
                   <p className="text-center text-white">Cargando equipos...</p>
                 ) : (
-                  <div className="list-group">
+                  <div className="list-group list-group-professional">
                     {equipos[fuerza].length === 0 ? (
-                      <p className="text-center text-white-50">
+                      <p className="text-center text-muted p-3">
                         No hay equipos en esta fuerza.
                       </p>
                     ) : (
-                      equipos[fuerza].map((team) => (
+                      equipos[fuerza].map((team: Team) => (
                         <Link
                           key={team.id}
                           to={`/registros/${team.id}`}
-                          className="list-group-item list-group-item-action"
+                          className="list-group-item list-group-item-action fw-bolder"
                         >
                           {team.nombre}
                         </Link>

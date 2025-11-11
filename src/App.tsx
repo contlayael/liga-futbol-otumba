@@ -16,6 +16,7 @@ import Registros from "./pages/Registros";
 import PlantelEquipo from "./pages/PlantelEquipo";
 import AdminSanciones from "./admin/AdminSanciones";
 import "./theme.css";
+import AdminAvisos from "./admin/AdminAvisos";
 
 function App() {
   return (
@@ -55,6 +56,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* ▼▼▼ RUTA AÑADIDA ▼▼▼ */}
+          <Route
+            path="/admin/avisos"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminAvisos />
+              </ProtectedRoute>
+            }
+          />
+          {/* ▲▲▲ FIN ▲▲▲ */}
           <Route
             path="/arbitro"
             element={

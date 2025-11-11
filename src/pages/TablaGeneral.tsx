@@ -1,4 +1,4 @@
-// src/pages/TablaGeneral.tsx (Actualizado con Tabla Clara)
+// src/pages/TablaGeneral.tsx (Corregido con la lógica del Admin)
 
 import { useEffect, useState } from "react";
 import { Tabs, Tab, Table } from "react-bootstrap";
@@ -15,6 +15,17 @@ import {
   type BaselineStats,
 } from "../services/teams";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+// ▼▼▼ IMPORTACIONES ACTUALIZADAS ▼▼▼
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { db } from "../services/firebaseConfig";
+// Importamos la función que SÍ funciona
+import {
+  getActiveSuspensionsByFuerza,
+  type Suspension,
+} from "../services/suspensions";
+import { type Aviso } from "../services/avisos";
+// ▲▲▲ FIN ▲▲▲
 
 const FUERZAS: Fuerza[] = ["1ra", "2da", "3ra"];
 type Row = { teamId: string; nombre: string; stats: Stats };
@@ -44,7 +55,6 @@ function addStats(a: Stats, b: Stats): Stats {
     Pts: a.Pts + b.Pts,
   };
 }
-
 function calculateStandings(
   teams: (Team & { baseline?: BaselineStats })[],
   matches: Match[]
@@ -93,6 +103,118 @@ function calculateStandings(
   return rows;
 }
 
+// ▼▼▼ SUB-COMPONENTE MODIFICADO (AHORA RECIBE 'fuerza') ▼▼▼
+function SancionesActivas({ fuerza }: { fuerza: Fuerza }) {
+  const [sanciones, setSanciones] = useState<Suspension[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Usamos una función async de una sola vez
+    const fetchSanciones = async () => {
+      setLoading(true);
+      try {
+        // ===> CAMBIO DE LÓGICA:
+        // Usamos la misma función que el Admin Panel, que SÍ funciona.
+        const data = await getActiveSuspensionsByFuerza(fuerza);
+        setSanciones(data);
+        // ===> FIN DEL CAMBIO
+      } catch (e) {
+        console.error("Error cargando sanciones (getDocs):", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSanciones();
+    // Se actualiza cada vez que el usuario cambia de pestaña (fuerza)
+  }, [fuerza]);
+  // ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲
+
+  if (loading)
+    return <p className="text-white-50 text-center">Cargando sanciones...</p>;
+  // No mostrar nada si no hay sanciones EN ESTA FUERZA
+  if (sanciones.length === 0) return null;
+
+  return (
+    // Se añade un margen superior
+    <div className="card card-theme mt-4">
+      <div className="card-body">
+        <h4 className="mb-3 text-danger">Sanciones</h4>
+        <div className="table-responsive">
+          <Table className="table-light table-striped align-middle table-professional">
+            <thead className="thead-dark-professional">
+              <tr>
+                <th className="text-start">Nombre</th>
+                <th className="text-start">Equipo</th>
+                <th className="text-center">Jornada (Expulsado)</th>
+                <th className="text-center">Sanción (Partidos)</th>
+                <th className="text-center">Regresa (Jornada)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sanciones.map((s) => (
+                <tr key={s.id}>
+                  <td className="text-start">{s.playerName}</td>
+                  <td className="text-start">{s.teamName}</td>
+                  <td className="text-center">{s.jornadaOfOffense}</td>
+                  <td className="text-center fw-bold">{s.gamesSuspended}</td>
+                  <td className="text-center fw-bold">{s.returnJornada}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// (El componente AvisosRecientes no cambia, usa getDocs y está bien)
+function AvisosRecientes() {
+  const [avisos, setAvisos] = useState<Aviso[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAvisos = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(db, "avisos"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(q);
+        const data = snap.docs.map(
+          (d) => ({ id: d.id, ...(d.data() as any) } as Aviso)
+        );
+        setAvisos(data);
+      } catch (e) {
+        console.error("Error cargando avisos (getDocs):", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAvisos();
+  }, []);
+
+  if (loading)
+    return <p className="text-white-50 text-center">Cargando avisos...</p>;
+  if (avisos.length === 0) return null;
+
+  return (
+    <div className="card card-theme mt-4">
+      <div className="card-body">
+        <h4 className="mb-3 text-info">Avisos Importantes</h4>
+        <div className="list-group list-group-professional">
+          {avisos.map((aviso) => (
+            <div key={aviso.id} className="list-group-item">
+              <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
+                {aviso.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TablaGeneral() {
   const [active, setActive] = useState<Fuerza>("1ra");
   const [tabla, setTabla] = useState<Record<Fuerza, Row[]>>({
@@ -112,7 +234,7 @@ export default function TablaGeneral() {
     Record<Fuerza, Match[]>
   >({ "1ra": [], "2da": [], "3ra": [] });
 
-  // ... (Los useEffect para cargar datos no cambian) ...
+  // (useEffect de carga de datos sin cambios)
   useEffect(() => {
     setLoading(true);
     const unsubscribers: (() => void)[] = [];
@@ -166,14 +288,8 @@ export default function TablaGeneral() {
             {loading && tabla[f].length === 0 ? (
               <p className="text-center my-5 text-white">Cargando…</p>
             ) : (
-              // ▼▼▼ CAMBIO DE CLASES AQUÍ ▼▼▼
               <div className="table-responsive">
-                {/* Quitamos 'table-dark' y 'table-borderless'
-                  Añadimos 'table-light' para el fondo blanco
-                  'table-professional' es nuestra nueva clase CSS
-                */}
                 <Table className="table-light table-striped table-hover align-middle table-professional">
-                  {/* 'thead-dark' de Bootstrap da el fondo de cabecera oscuro */}
                   <thead className="thead-dark-professional">
                     <tr>
                       <th
@@ -224,7 +340,6 @@ export default function TablaGeneral() {
                         <tr key={r.teamId}>
                           <td className="text-center fw-bold">{index + 1}</td>
                           <td className="text-start">
-                            {/* El 'team-link' ahora será oscuro por CSS */}
                             <Link
                               to={`/registros/${r.teamId}`}
                               className="team-link"
@@ -248,11 +363,18 @@ export default function TablaGeneral() {
                   </tbody>
                 </Table>
               </div>
-              // ▲▲▲ FIN DE CAMBIOS ▲▲▲
             )}
+
+            {/* ▼▼▼ MODIFICACIÓN: Sanciones AHORA ESTÁ DENTRO y recibe la 'fuerza' ▼▼▼ */}
+            <SancionesActivas fuerza={f} />
+            {/* ▲▲▲ FIN ▲▲▲ */}
           </Tab>
         ))}
       </Tabs>
+
+      {/* ▼▼▼ MODIFICACIÓN: Avisos AHORA ESTÁ FUERA de las pestañas ▼▼▼ */}
+      <AvisosRecientes />
+      {/* ▲▲▲ FIN ▲▲▲ */}
     </div>
   );
 }

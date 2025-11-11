@@ -300,6 +300,7 @@ export default function AdminFuerzas() {
       const data = await getTeamsByFuerza(fuerza);
       setEquipos((prev) => ({ ...prev, [fuerza]: data }));
       setInfo("Equipo agregado correctamente.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error("addTeam error:", e?.code || e);
       setErr("No se pudo agregar el equipo.");
@@ -476,6 +477,11 @@ export default function AdminFuerzas() {
       <div className="d-flex justify-content-end mb-3">
         <Link to="/admin/sanciones" className="btn btn-warning">
           Gestionar Sanciones
+        </Link>
+        <Link to="/admin/avisos" className="btn btn-info">
+          {" "}
+          {/* <-- BOTÓN AÑADIDO */}
+          Publicar Avisos
         </Link>
       </div>
 
