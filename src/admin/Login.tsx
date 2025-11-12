@@ -91,7 +91,10 @@ export default function Login() {
 
         {/* Muestra "Ir al panel" si ya hay sesión (por si el redirect aún no corrió) */}
         {user && role && (
-          <button className="btn btn-outline-light btn-sm" onClick={handleGoToPanel}>
+          <button
+            className="btn btn-outline-light btn-sm"
+            onClick={handleGoToPanel}
+          >
             Ir al panel
           </button>
         )}
@@ -129,7 +132,7 @@ export default function Login() {
                 type="email"
                 className="form-control"
                 value={email}
-                placeholder="admin@liga.com"
+                placeholder="admin"
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
@@ -181,7 +184,8 @@ export default function Login() {
               className="btn-link-light"
               onClick={handleBackToSite}
             >
-              ← Volver a {returnPath === "/" ? "Tabla General" : "la página anterior"}
+              ← Volver a{" "}
+              {returnPath === "/" ? "Tabla General" : "la página anterior"}
             </button>
           </div>
         </div>
