@@ -1,5 +1,3 @@
-// src/pages/TablaGeneral.tsx (Corregido con la lógica del Admin)
-
 import { useEffect, useState } from "react";
 import { Tabs, Tab, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -16,19 +14,21 @@ import {
 } from "../services/teams";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-// ▼▼▼ IMPORTACIONES ACTUALIZADAS ▼▼▼
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
-// Importamos la función que SÍ funciona
 import {
   getActiveSuspensionsByFuerza,
   type Suspension,
 } from "../services/suspensions";
-import { type Aviso } from "../services/avisos";
-// ▲▲▲ FIN ▲▲▲
+import { type Aviso } from "../services/avisos"; // Asumo que tienes 'avisos.ts'
 
 const FUERZAS: Fuerza[] = ["1ra", "2da", "3ra"];
-type Row = { teamId: string; nombre: string; stats: Stats };
+type Row = {
+  teamId: string;
+  nombre: string;
+  stats: Stats;
+  penaltyPoints: number;
+};
 const ZERO_STATS: Stats = {
   PJ: 0,
   G: 0,
@@ -40,7 +40,7 @@ const ZERO_STATS: Stats = {
   Pts: 0,
 };
 
-// ... (Las funciones addStats y calculateStandings no cambian) ...
+// ... (Las funciones addStats y calculateStandings no cambian, están correctas) ...
 function addStats(a: Stats, b: Stats): Stats {
   const GF = a.GF + b.GF;
   const GC = a.GC + b.GC;
@@ -92,10 +92,18 @@ function calculateStandings(
     }
     const added: Stats = { PJ, G, E, P, GF, GC, DG: GF - GC, Pts: G * 3 + E };
     const total = addStats(base, added);
-    rows.push({ teamId: t.id, nombre: t.nombre, stats: total });
+    const penalty = t.puntosMenos || 0;
+    rows.push({
+      teamId: t.id,
+      nombre: t.nombre,
+      stats: total,
+      penaltyPoints: penalty,
+    });
   }
   rows.sort((a, b) => {
-    if (b.stats.Pts !== a.stats.Pts) return b.stats.Pts - a.stats.Pts;
+    const ptsA = a.stats.Pts - a.penaltyPoints;
+    const ptsB = b.stats.Pts - b.penaltyPoints;
+    if (ptsB !== ptsA) return ptsB - ptsA;
     if (b.stats.DG !== a.stats.DG) return b.stats.DG - a.stats.DG;
     if (b.stats.GF !== a.stats.GF) return b.stats.GF - a.stats.GF;
     return a.nombre.localeCompare(b.nombre);
@@ -103,40 +111,30 @@ function calculateStandings(
   return rows;
 }
 
-// ▼▼▼ SUB-COMPONENTE MODIFICADO (AHORA RECIBE 'fuerza') ▼▼▼
+// ... (SancionesActivas y AvisosRecientes no cambian) ...
 function SancionesActivas({ fuerza }: { fuerza: Fuerza }) {
   const [sanciones, setSanciones] = useState<Suspension[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    // Usamos una función async de una sola vez
     const fetchSanciones = async () => {
       setLoading(true);
       try {
-        // ===> CAMBIO DE LÓGICA:
-        // Usamos la misma función que el Admin Panel, que SÍ funciona.
         const data = await getActiveSuspensionsByFuerza(fuerza);
         setSanciones(data);
-        // ===> FIN DEL CAMBIO
       } catch (e) {
         console.error("Error cargando sanciones (getDocs):", e);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSanciones();
-    // Se actualiza cada vez que el usuario cambia de pestaña (fuerza)
   }, [fuerza]);
-  // ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲
 
   if (loading)
     return <p className="text-white-50 text-center">Cargando sanciones...</p>;
-  // No mostrar nada si no hay sanciones EN ESTA FUERZA
   if (sanciones.length === 0) return null;
 
   return (
-    // Se añade un margen superior
     <div className="card card-theme mt-4">
       <div className="card-body">
         <h4 className="mb-3 text-danger">Sanciones</h4>
@@ -168,12 +166,9 @@ function SancionesActivas({ fuerza }: { fuerza: Fuerza }) {
     </div>
   );
 }
-
-// (El componente AvisosRecientes no cambia, usa getDocs y está bien)
 function AvisosRecientes() {
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchAvisos = async () => {
       setLoading(true);
@@ -234,7 +229,7 @@ export default function TablaGeneral() {
     Record<Fuerza, Match[]>
   >({ "1ra": [], "2da": [], "3ra": [] });
 
-  // (useEffect de carga de datos sin cambios)
+  // ... (useEffect de carga de datos no cambia) ...
   useEffect(() => {
     setLoading(true);
     const unsubscribers: (() => void)[] = [];
@@ -260,6 +255,7 @@ export default function TablaGeneral() {
     return () => unsubscribers.forEach((unsub) => unsub());
   }, []);
 
+  // ... (useEffect de cálculo de tabla no cambia) ...
   useEffect(() => {
     if (Object.values(teamsByFuerza).every((arr) => arr.length === 0)) return;
     const newTabla: Record<Fuerza, Row[]> = { "1ra": [], "2da": [], "3ra": [] };
@@ -324,6 +320,9 @@ export default function TablaGeneral() {
                         DG
                       </th>
                       <th scope="col" className="text-center">
+                        PM
+                      </th>
+                      <th scope="col" className="text-center">
                         Pts
                       </th>
                     </tr>
@@ -331,9 +330,11 @@ export default function TablaGeneral() {
                   <tbody>
                     {tabla[f].length === 0 ? (
                       <tr>
-                        <td colSpan={10} className="text-center text-muted">
+                        {/* ▼▼▼ CORRECCIÓN 1: colSpan debe ser 11 ▼▼▼ */}
+                        <td colSpan={11} className="text-center text-muted">
                           Sin equipos en esta fuerza.
                         </td>
+                        {/* ▲▲▲ FIN ▲▲▲ */}
                       </tr>
                     ) : (
                       tabla[f].map((r, index) => (
@@ -354,8 +355,16 @@ export default function TablaGeneral() {
                           <td className="text-center">{r.stats.GF}</td>
                           <td className="text-center">{r.stats.GC}</td>
                           <td className="text-center">{r.stats.DG}</td>
+
+                          {/* ▼▼▼ CORRECCIÓN 2: Celda PM Faltante ▼▼▼ */}
+                          <td className="text-center text-danger fw-bold">
+                            {r.penaltyPoints > 0 ? `-${r.penaltyPoints}` : 0}
+                          </td>
+                          {/* ▲▲▲ FIN ▲▲▲ */}
+
+                          {/* Pts ahora se calcula restando la penalización */}
                           <td className="text-center fw-bold fs-5 text-primary-custom">
-                            {r.stats.Pts}
+                            {r.stats.Pts - r.penaltyPoints}
                           </td>
                         </tr>
                       ))
@@ -364,17 +373,11 @@ export default function TablaGeneral() {
                 </Table>
               </div>
             )}
-
-            {/* ▼▼▼ MODIFICACIÓN: Sanciones AHORA ESTÁ DENTRO y recibe la 'fuerza' ▼▼▼ */}
             <SancionesActivas fuerza={f} />
-            {/* ▲▲▲ FIN ▲▲▲ */}
           </Tab>
         ))}
       </Tabs>
-
-      {/* ▼▼▼ MODIFICACIÓN: Avisos AHORA ESTÁ FUERA de las pestañas ▼▼▼ */}
       <AvisosRecientes />
-      {/* ▲▲▲ FIN ▲▲▲ */}
     </div>
   );
 }

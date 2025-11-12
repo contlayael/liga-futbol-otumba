@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 // ===> Añadido Link para el botón de Sanciones
 import { Link } from "react-router-dom";
-import { Tabs, Tab, Modal } from "react-bootstrap";
+import { Tabs, Tab, Modal, Form, Button } from "react-bootstrap";
 import {
   addTeam,
   deleteTeam,
   getTeamsByFuerza,
   updateTeamBaseline,
   updateTeamName,
+  updateTeamPenaltyPoints,
   type Fuerza,
   type Team,
 } from "../services/teams";
@@ -124,6 +125,11 @@ export default function AdminFuerzas() {
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [editedName, setEditedName] = useState("");
+  // ▼▼▼ NUEVOS ESTADOS PARA SANCIÓN (PM) ▼▼▼
+  const [showPenaltyModal, setShowPenaltyModal] = useState(false);
+  const [teamToPenalize, setTeamToPenalize] = useState<Team | null>(null);
+  const [penaltyPoints, setPenaltyPoints] = useState(0);
+  // ▲▲▲ FIN ▲▲▲
   const [playerTeamId, setPlayerTeamId] = useState<Record<Fuerza, string>>({
     "1ra": "",
     "2da": "",
@@ -230,6 +236,43 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
+
+  // ▼▼▼ NUEVAS FUNCIONES PARA SANCIÓN (PM) ▼▼▼
+  function openPenaltyModal(team: Team) {
+    setTeamToPenalize(team);
+    // Carga los puntos que el equipo ya tiene (o 0)
+    setPenaltyPoints(team.puntosMenos || 0);
+    setShowPenaltyModal(true);
+  }
+
+  function closePenaltyModal() {
+    setTeamToPenalize(null);
+    setShowPenaltyModal(false);
+  }
+
+  async function handleSavePenalty() {
+    if (!teamToPenalize) return;
+
+    setLoading(true);
+    setErr("");
+    setInfo("");
+    try {
+      await updateTeamPenaltyPoints(teamToPenalize.id, penaltyPoints);
+      // Recargar los equipos de esa fuerza para mostrar el cambio
+      const data = await getTeamsByFuerza(teamToPenalize.fuerza);
+      setEquipos((prev) => ({ ...prev, [teamToPenalize.fuerza]: data }));
+      setInfo(
+        `Sanción de ${penaltyPoints} puntos guardada para ${teamToPenalize.nombre}.`
+      );
+      closePenaltyModal();
+    } catch (e) {
+      console.error(e);
+      setErr("No se pudo guardar la sanción de puntos.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  // ▲▲▲ FIN ▲▲▲
 
   // useEffect para guardar la jornada (Corregido)
   useEffect(() => {
@@ -574,6 +617,14 @@ export default function AdminFuerzas() {
                                   >
                                     Baseline
                                   </button>
+                                  {/* ▼▼▼ NUEVO BOTÓN SANCIÓN (PM) ▼▼▼ */}
+                                  <button
+                                    className="btn btn-outline-warning btn-sm"
+                                    onClick={() => openPenaltyModal(t)}
+                                  >
+                                    Sancionar (PM)
+                                  </button>
+                                  {/* ▲▲▲ FIN ▲▲▲ */}
                                 </div>
                               </li>
                             ))}
@@ -1064,6 +1115,58 @@ export default function AdminFuerzas() {
         </div>
       </Modal>
       {/* ▲▲▲ FIN DEL CÓDIGO RESTAURADO ▲▲▲ */}
+      {/* ▼▼▼ NUEVO MODAL PARA SANCIÓN (PM) ▼▼▼ */}
+      <Modal show={showPenaltyModal} onHide={closePenaltyModal} centered>
+        <div className="modal-content p-3">
+          <Modal.Header>
+            <Modal.Title>Sancionar (Puntos Menos)</Modal.Title>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={closePenaltyModal}
+            />
+          </Modal.Header>
+          <Modal.Body>
+            <p>
+              Establece el total de puntos a restar para el equipo:{" "}
+              <strong>{teamToPenalize?.nombre}</strong>.
+            </p>
+            <Form.Group>
+              <Form.Label>Total de Puntos Menos (PM)</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                value={penaltyPoints}
+                onChange={(e) =>
+                  setPenaltyPoints(parseInt(e.target.value, 10) || 0)
+                }
+                placeholder="0"
+              />
+              <Form.Text className="text-muted">
+                Si el equipo tiene -1 y sufre otra sanción de -1, ingresa "2".
+                Este es el valor total.
+              </Form.Text>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={closePenaltyModal}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleSavePenalty}
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Guardar Sanción"}
+            </Button>
+          </Modal.Footer>
+        </div>
+      </Modal>
+      {/* ▲▲▲ FIN ▲▲▲ */}
     </>
   );
 }
