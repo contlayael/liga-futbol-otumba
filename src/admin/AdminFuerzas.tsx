@@ -1,4 +1,4 @@
-// src/admin/AdminFuerzas.tsx (Limpio y Completo)
+// src/admin/AdminFuerzas.tsx (Corregido)
 
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -229,6 +229,7 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
+
   function openPenaltyModal(team: Team) {
     setTeamToPenalize(team);
     setPenaltyPoints(team.puntosMenos || 0);
@@ -575,18 +576,21 @@ export default function AdminFuerzas() {
                                 className="d-flex justify-content-between align-items-center py-1"
                               >
                                 <span>
-                                  {t.nombre}
+                                  {t.nombre}{" "}
                                   {t.baseline && (
                                     <span className="badge bg-success ms-2">
                                       BL J{t.baseline.upToRound}
                                     </span>
                                   )}
-                                  {t.puntosMenos > 0 && (
+                                  {/* ▼▼▼ CORRECCIÓN DE ERROR ts(18048) ▼▼▼ */}
+                                  {t.puntosMenos && t.puntosMenos > 0 && (
                                     <span className="badge bg-danger ms-2">
                                       -{t.puntosMenos} Pts
                                     </span>
                                   )}
+                                  {/* ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ */}
                                 </span>
+
                                 <div className="d-flex gap-2">
                                   <button
                                     className="btn btn-outline-info btn-sm"
@@ -1126,7 +1130,7 @@ export default function AdminFuerzas() {
                 }
                 placeholder="0"
               />
-              <Form.Text className="text-muted">
+              <Form.Text className="text-white-50">
                 Este es el valor total. Si ya tiene -1 y quieres añadir -1,
                 ingresa "2".
               </Form.Text>
