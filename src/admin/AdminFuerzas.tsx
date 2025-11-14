@@ -1,7 +1,6 @@
-// src/admin/AdminFuerzas.tsx (Corregido y Restaurado)
+// src/admin/AdminFuerzas.tsx (Limpio y Completo)
 
 import { useEffect, useMemo, useState } from "react";
-// ===> Añadido Link para el botón de Sanciones
 import { Link } from "react-router-dom";
 import { Tabs, Tab, Modal, Form, Button } from "react-bootstrap";
 import {
@@ -83,7 +82,6 @@ export default function AdminFuerzas() {
     "3ra": TODAY_DATE,
   });
 
-  // 'round' es un NÚMERO
   const [round, setRound] = useState<number>(getInitialRoundState());
 
   const [rows, setRows] = useState<Record<Fuerza, Row[]>>({
@@ -108,7 +106,7 @@ export default function AdminFuerzas() {
   const [info, setInfo] = useState<string>("");
   const [err, setErr] = useState<string>("");
 
-  // Estados de Modales (Variables que SÍ se usan)
+  // Estados de Modales
   const [showBaseline, setShowBaseline] = useState(false);
   const [teamBL, setTeamBL] = useState<Team | null>(null);
   const [bRound, setBRound] = useState(6);
@@ -118,18 +116,16 @@ export default function AdminFuerzas() {
   const [bP, setBP] = useState(0);
   const [bGF, setBGF] = useState(0);
   const [bGC, setBGC] = useState(0);
-  const bDG = bGF - bGC; // <--- SÍ se usa en el modal
-  const bPts = bG * 3 + bE; // <--- SÍ se usa en el modal
+  const bDG = bGF - bGC;
+  const bPts = bG * 3 + bE;
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [editedName, setEditedName] = useState("");
-  // ▼▼▼ NUEVOS ESTADOS PARA SANCIÓN (PM) ▼▼▼
   const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const [teamToPenalize, setTeamToPenalize] = useState<Team | null>(null);
   const [penaltyPoints, setPenaltyPoints] = useState(0);
-  // ▲▲▲ FIN ▲▲▲
   const [playerTeamId, setPlayerTeamId] = useState<Record<Fuerza, string>>({
     "1ra": "",
     "2da": "",
@@ -140,7 +136,7 @@ export default function AdminFuerzas() {
   const [playerRegistroId, setPlayerRegistroId] = useState("");
   const [playerPhoto, setPlayerPhoto] = useState<File | null>(null);
 
-  // Funciones de Modales (Funciones que SÍ se usan)
+  // Funciones de Modales
   function openEditModal(team: Team) {
     setTeamToEdit(team);
     setEditedName(team.nombre);
@@ -151,7 +147,6 @@ export default function AdminFuerzas() {
     setShowDelete(true);
   }
   async function handleEdit() {
-    // <--- SÍ se usa en el modal
     if (!teamToEdit || !editedName.trim()) return;
     setLoading(true);
     try {
@@ -168,7 +163,6 @@ export default function AdminFuerzas() {
     }
   }
   async function handleDelete() {
-    // <--- SÍ se usa en el modal
     if (!teamToDelete) return;
     setLoading(true);
     try {
@@ -206,7 +200,6 @@ export default function AdminFuerzas() {
     setShowBaseline(true);
   }
   async function saveBaseline() {
-    // <--- SÍ se usa en el modal
     if (!teamBL) return;
     if (bPJ !== bG + bE + bP) {
       setErr("La suma G + E + P debe ser igual a PJ.");
@@ -236,29 +229,22 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-
-  // ▼▼▼ NUEVAS FUNCIONES PARA SANCIÓN (PM) ▼▼▼
   function openPenaltyModal(team: Team) {
     setTeamToPenalize(team);
-    // Carga los puntos que el equipo ya tiene (o 0)
     setPenaltyPoints(team.puntosMenos || 0);
     setShowPenaltyModal(true);
   }
-
   function closePenaltyModal() {
     setTeamToPenalize(null);
     setShowPenaltyModal(false);
   }
-
   async function handleSavePenalty() {
     if (!teamToPenalize) return;
-
     setLoading(true);
     setErr("");
     setInfo("");
     try {
       await updateTeamPenaltyPoints(teamToPenalize.id, penaltyPoints);
-      // Recargar los equipos de esa fuerza para mostrar el cambio
       const data = await getTeamsByFuerza(teamToPenalize.fuerza);
       setEquipos((prev) => ({ ...prev, [teamToPenalize.fuerza]: data }));
       setInfo(
@@ -272,16 +258,15 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
-  // ▲▲▲ FIN ▲▲▲
 
-  // useEffect para guardar la jornada (Corregido)
+  // useEffect para guardar la jornada
   useEffect(() => {
     if (round > 0) {
       localStorage.setItem(LIGA_LAST_JORNADA_KEY, String(round));
     }
   }, [round]);
 
-  // useEffect Cargar Equipos (sin cambios)
+  // useEffect Cargar Equipos
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -299,7 +284,7 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey]);
 
-  // useEffect Cargar Partidos (sin cambios)
+  // useEffect Cargar Partidos
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -320,7 +305,6 @@ export default function AdminFuerzas() {
     })();
   }, [activeKey, matchDate[activeKey]]);
 
-  // ... (nameById, handleAddTeam, addRow, removeRow, updateRow... sin cambios) ...
   const nameById = useMemo(() => {
     const m = new Map<string, string>();
     FUERZAS.forEach((f) => {
@@ -328,6 +312,7 @@ export default function AdminFuerzas() {
     });
     return m;
   }, [equipos]);
+
   async function handleAddTeam(fuerza: Fuerza) {
     const name = (nuevoNombre[fuerza] || "").trim();
     if (!name) {
@@ -343,7 +328,6 @@ export default function AdminFuerzas() {
       const data = await getTeamsByFuerza(fuerza);
       setEquipos((prev) => ({ ...prev, [fuerza]: data }));
       setInfo("Equipo agregado correctamente.");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error("addTeam error:", e?.code || e);
       setErr("No se pudo agregar el equipo.");
@@ -351,6 +335,7 @@ export default function AdminFuerzas() {
       setLoading(false);
     }
   }
+
   function addRow(fuerza: Fuerza) {
     setRows((prev) => ({
       ...prev,
@@ -373,18 +358,17 @@ export default function AdminFuerzas() {
     }));
   }
 
-  // saveSchedule (Corregido)
   async function saveSchedule(fuerza: Fuerza) {
     if (equipos[fuerza].length === 0) {
       setErr("Primero agrega equipos en esta fuerza.");
       return;
     }
     const date = matchDate[fuerza];
-    const jornada = round; // 'round' es un number
+    const jornada = round;
     const toSave = rows[fuerza]
       .map((r) => ({
         fuerza,
-        round: jornada, // Asignación válida
+        round: jornada,
         matchDate: date,
         time: r.time.trim(),
         field: r.field.trim(),
@@ -428,7 +412,6 @@ export default function AdminFuerzas() {
     }
   }
 
-  // ... (handleDeleteMatch, handleRegisterPlayer no cambian) ...
   async function handleDeleteMatch(fuerza: Fuerza, matchId: string) {
     setLoading(true);
     setErr("");
@@ -517,14 +500,15 @@ export default function AdminFuerzas() {
       {info && <div className="alert alert-info">{info}</div>}
       {loading && <p className="text-muted">Procesando…</p>}
 
-      <div className="d-flex justify-content-end mb-3">
+      <div className="d-flex justify-content-end gap-2 mb-3">
         <Link to="/admin/sanciones" className="btn btn-warning">
           Gestionar Sanciones
         </Link>
         <Link to="/admin/avisos" className="btn btn-info">
-          {" "}
-          {/* <-- BOTÓN AÑADIDO */}
           Publicar Avisos
+        </Link>
+        <Link to="/admin/contacto" className="btn btn-success">
+          Bandeja de Contacto
         </Link>
       </div>
 
@@ -591,10 +575,15 @@ export default function AdminFuerzas() {
                                 className="d-flex justify-content-between align-items-center py-1"
                               >
                                 <span>
-                                  {t.nombre}{" "}
+                                  {t.nombre}
                                   {t.baseline && (
                                     <span className="badge bg-success ms-2">
                                       BL J{t.baseline.upToRound}
+                                    </span>
+                                  )}
+                                  {t.puntosMenos > 0 && (
+                                    <span className="badge bg-danger ms-2">
+                                      -{t.puntosMenos} Pts
                                     </span>
                                   )}
                                 </span>
@@ -617,14 +606,12 @@ export default function AdminFuerzas() {
                                   >
                                     Baseline
                                   </button>
-                                  {/* ▼▼▼ NUEVO BOTÓN SANCIÓN (PM) ▼▼▼ */}
                                   <button
                                     className="btn btn-outline-warning btn-sm"
                                     onClick={() => openPenaltyModal(t)}
                                   >
                                     Sancionar (PM)
                                   </button>
-                                  {/* ▲▲▲ FIN ▲▲▲ */}
                                 </div>
                               </li>
                             ))}
@@ -657,7 +644,6 @@ export default function AdminFuerzas() {
                         <small>Ej: 2025-09-21 (domingo)</small>
                       </div>
 
-                      {/* Input de Jornada (Corregido) */}
                       <div className="col-sm-4 col-md-2">
                         <label className="form-label">Jornada</label>
                         <input
@@ -675,7 +661,6 @@ export default function AdminFuerzas() {
                     <h6 className="mb-2">Agregar partidos</h6>
                     {rows[fuerza].map((r) => (
                       <div className="row g-2 align-items-end mb-2" key={r.id}>
-                        {/* ... (inputs de partido) ... */}
                         <div className="col-lg-3">
                           <label className="form-label">Local</label>
                           <select
@@ -839,7 +824,6 @@ export default function AdminFuerzas() {
                       Registrar Jugadores en {fuerza} Fuerza
                     </h5>
                     <div className="row g-3">
-                      {/* ... (Inputs de registro de jugador) ... */}
                       <div className="col-md-4">
                         <label className="form-label">Equipo</label>
                         <select
@@ -932,7 +916,7 @@ export default function AdminFuerzas() {
         ))}
       </Tabs>
 
-      {/* ▼▼▼ CÓDIGO DEL MODAL RESTAURADO ▼▼▼ */}
+      {/* --- Modales --- */}
 
       {/* Baseline Modal */}
       <Modal show={showBaseline} onHide={() => setShowBaseline(false)} centered>
@@ -1030,7 +1014,7 @@ export default function AdminFuerzas() {
                 <input className="form-control" value={bPts} disabled />
               </div>
             </div>
-            <small className="text-muted d-block mt-2">
+            <small className="text-white d-block mt-2">
               La baseline aplica hasta la jornada indicada...
             </small>
           </div>
@@ -1114,8 +1098,8 @@ export default function AdminFuerzas() {
           </div>
         </div>
       </Modal>
-      {/* ▲▲▲ FIN DEL CÓDIGO RESTAURADO ▲▲▲ */}
-      {/* ▼▼▼ NUEVO MODAL PARA SANCIÓN (PM) ▼▼▼ */}
+
+      {/* Modal Sanción (PM) */}
       <Modal show={showPenaltyModal} onHide={closePenaltyModal} centered>
         <div className="modal-content p-3">
           <Modal.Header>
@@ -1143,8 +1127,8 @@ export default function AdminFuerzas() {
                 placeholder="0"
               />
               <Form.Text className="text-muted">
-                Si el equipo tiene -1 y sufre otra sanción de -1, ingresa "2".
-                Este es el valor total.
+                Este es el valor total. Si ya tiene -1 y quieres añadir -1,
+                ingresa "2".
               </Form.Text>
             </Form.Group>
           </Modal.Body>
@@ -1166,7 +1150,6 @@ export default function AdminFuerzas() {
           </Modal.Footer>
         </div>
       </Modal>
-      {/* ▲▲▲ FIN ▲▲▲ */}
     </>
   );
 }

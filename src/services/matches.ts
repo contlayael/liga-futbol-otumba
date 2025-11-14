@@ -29,13 +29,13 @@ export interface NewMatch {
   woTeamId?: string | null;
   yellowCardCount?: { [playerId: string]: number };
   redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
-
-  // ▼▼▼ CAMPO AÑADIDO ▼▼▼
-  /**
-   * Objeto que mapea un playerId al NÚMERO de goles que anotó en este partido.
-   * Ejemplo: { "player-abc": 3, "player-xyz": 1 }
-   */
   scorers?: { [playerId: string]: number };
+
+  // ▼▼▼ CAMPOS AÑADIDOS ▼▼▼
+  /** Puntos otorgados por victoria (default: 3) */
+  pointsForWin?: number;
+  /** Puntos otorgados por empate (default: 1) */
+  pointsForDraw?: number;
   // ▲▲▲ FIN ▲▲▲
 }
 
@@ -49,6 +49,7 @@ export async function addMatch(m: NewMatch): Promise<string> {
 }
 
 export async function addMatchesBulk(matches: NewMatch[]): Promise<void> {
+  // Verificación de validez (no necesita cambiar)
   const valid = matches.filter(
     (m) =>
       m.fuerza &&
@@ -60,9 +61,11 @@ export async function addMatchesBulk(matches: NewMatch[]): Promise<void> {
       m.awayTeamId &&
       m.homeTeamId !== m.awayTeamId
   );
+  // addMatch guardará los nuevos campos si existen
   await Promise.all(valid.map(addMatch));
 }
 
+// ... (listMatchesByDateAndFuerza y subscribeMatchesByDateAndFuerza no cambian) ...
 export async function listMatchesByDateAndFuerza(
   matchDate: string,
   fuerza: Fuerza
@@ -79,7 +82,6 @@ export async function listMatchesByDateAndFuerza(
   return arr;
 }
 
-// 🔴 Suscripción en tiempo real al rol por fecha + fuerza
 export function subscribeMatchesByDateAndFuerza(
   matchDate: string,
   fuerza: Fuerza,
@@ -99,7 +101,6 @@ export function subscribeMatchesByDateAndFuerza(
   return unsub;
 }
 
-// 🔴 Suscripción a partidos FINALIZADOS por fuerza (para tabla general en tiempo real)
 export function subscribeFinishedMatchesByFuerza(
   fuerza: Fuerza,
   cb: (matches: Match[]) => void
@@ -117,7 +118,8 @@ export function subscribeFinishedMatchesByFuerza(
   return unsub;
 }
 
-// 🔧 Actualizar marcador (normal o W.O.)
+
+// updateMatchScore (Los nuevos campos no se tocan aquí, ya que se definen al crear el match)
 export async function updateMatchScore(
   matchId: string,
   payload: {
@@ -127,9 +129,7 @@ export async function updateMatchScore(
     woTeamId?: string | null;
     yellowCardCount?: { [playerId: string]: number };
     redCardReason?: { [playerId: string]: "Doble Amarilla" | "Roja Directa" };
-    // ▼▼▼ CAMPO AÑADIDO ▼▼▼
     scorers?: { [playerId: string]: number };
-    // ▲▲▲ FIN ▲▲▲
   }
 ) {
   const ref = doc(db, "matches", matchId);
@@ -140,9 +140,7 @@ export async function updateMatchScore(
     woTeamId: payload.woTeamId ?? null,
     yellowCardCount: payload.yellowCardCount ?? {},
     redCardReason: payload.redCardReason ?? {},
-    // ▼▼▼ LÍNEA AÑADIDA ▼▼▼
     scorers: payload.scorers ?? {},
-    // ▲▲▲ FIN ▲▲▲
   });
 }
 

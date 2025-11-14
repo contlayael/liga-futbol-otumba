@@ -15,8 +15,10 @@ import Footer from "./layout/Footer";
 import Registros from "./pages/Registros";
 import PlantelEquipo from "./pages/PlantelEquipo";
 import AdminSanciones from "./admin/AdminSanciones";
-import "./theme.css";
 import AdminAvisos from "./admin/AdminAvisos";
+import Contacto from "./pages/Contacto";
+import AdminContacto from "./admin/AdminContacto";
+import "./theme.css";
 
 function App() {
   return (
@@ -35,6 +37,7 @@ function App() {
           <Route path="/patrocinadores" element={<Patrocinadores />} />
           <Route path="/registros" element={<Registros />} />
           <Route path="/registros/:teamId" element={<PlantelEquipo />} />
+          <Route path="/contacto" element={<Contacto />} />
 
           {/* --- Login --- */}
           <Route path="/login" element={<Login />} />
@@ -56,7 +59,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* ▼▼▼ RUTA AÑADIDA ▼▼▼ */}
           <Route
             path="/admin/avisos"
             element={
@@ -65,7 +67,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* ▲▲▲ FIN ▲▲▲ */}
+          <Route
+            path="/admin/contacto"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminContacto />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/arbitro"
             element={

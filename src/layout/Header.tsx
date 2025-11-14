@@ -81,6 +81,9 @@ export default function Header() {
             {/*<Nav.Link as={NavLink} to="/avisos">
               Avisos
             </Nav.Link>*/}
+            <Nav.Link as={NavLink} to="/contacto">
+              Contacto
+            </Nav.Link>
             <Nav.Link as={NavLink} to="/patrocinadores">
               Patrocinadores
             </Nav.Link>
