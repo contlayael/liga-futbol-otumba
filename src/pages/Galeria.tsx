@@ -196,7 +196,7 @@ export default function Galeria() {
 
       {!loading && albums.length === 0 && (
         <div className="card card-theme">
-          <div className="card-body text-center text-muted p-5">
+          <div className="card-body text-center text-white p-5">
             Aún no hay álbumes de fotos publicados.
           </div>
         </div>
