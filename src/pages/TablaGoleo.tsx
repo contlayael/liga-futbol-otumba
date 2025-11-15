@@ -283,7 +283,7 @@ export default function TablaGoleo() {
                 ¿Estás seguro de que deseas eliminar a{" "}
                 <strong>{playerToDelete.nombre}</strong>?
               </p>
-              <p className="text-danger-emphasis">
+              <p className="text-danger">
                 Esta acción es irreversible. El jugador será eliminado
                 permanentemente de la colección de <strong>jugadores</strong>,
                 borrará su foto y desaparecerá de esta tabla de goleo.

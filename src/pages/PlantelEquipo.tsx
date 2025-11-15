@@ -293,7 +293,7 @@ export default function PlantelEquipo() {
                 <strong>{playerToDelete.nombre}</strong> del equipo{" "}
                 <strong>{playerToDelete.teamName}</strong>?
               </p>
-              <p className="text-danger-emphasis">
+              <p className="text-danger">
                 Esta acción es irreversible y también borrará su foto.
               </p>
             </Modal.Body>
