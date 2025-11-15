@@ -78,6 +78,9 @@ export default function Header() {
             <Nav.Link as={NavLink} to="/goleo">
               Tabla de Goleo
             </Nav.Link>
+            <Nav.Link as={NavLink} to="/galeria">
+              Galería
+            </Nav.Link>
             {/*<Nav.Link as={NavLink} to="/avisos">
               Avisos
             </Nav.Link>*/}

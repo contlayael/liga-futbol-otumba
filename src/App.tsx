@@ -18,6 +18,7 @@ import AdminSanciones from "./admin/AdminSanciones";
 import AdminAvisos from "./admin/AdminAvisos";
 import Contacto from "./pages/Contacto";
 import AdminContacto from "./admin/AdminContacto";
+import Galeria from "./pages/Galeria";
 import "./theme.css";
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/registros" element={<Registros />} />
           <Route path="/registros/:teamId" element={<PlantelEquipo />} />
           <Route path="/contacto" element={<Contacto />} />
+          <Route path="/galeria" element={<Galeria />} />
 
           {/* --- Login --- */}
           <Route path="/login" element={<Login />} />
