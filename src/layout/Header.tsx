@@ -69,11 +69,11 @@ export default function Header() {
             <Nav.Link as={NavLink} to="/tabla-general">
               Tabla General
             </Nav.Link>
-            <Nav.Link as={NavLink} to="/registros">
-              Registros
-            </Nav.Link>
             <Nav.Link as={NavLink} to="/rol-juego">
               Rol de juego
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/registros">
+              Registros
             </Nav.Link>
             <Nav.Link as={NavLink} to="/goleo">
               Tabla de Goleo

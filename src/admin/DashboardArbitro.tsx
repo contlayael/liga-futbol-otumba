@@ -1,6 +1,8 @@
-// src/admin/DashboardArbitro.tsx
+// src/admin/DashboardArbitro.tsx (Actualizado con Feedback en Botón)
+
 import { useEffect, useState } from "react";
-import { Tabs, Tab, Modal, Button, Form, Table } from "react-bootstrap";
+// ▼▼▼ Importar 'Alert' para los errores ▼▼▼
+import { Tabs, Tab, Modal, Button, Form, Table, Alert } from "react-bootstrap";
 import {
   subscribeMatchesByDateAndFuerza,
   updateMatchScore,
@@ -30,20 +32,17 @@ type CardEditState = {
   redDirect: boolean;
 };
 
-// ▼▼▼ TIPO ACTUALIZADO ▼▼▼
 type EditRow = {
   homeScore: string;
   awayScore: string;
   noShow: "none" | "home" | "away";
   defaultWin: string;
   cardEdits: { [playerId: string]: CardEditState };
-  /**
-   * Mapea un playerId al NÚMERO de goles que anotó en este partido.
-   * Ejemplo: { "player-abc": 3 }
-   */
   scorerEdits: { [playerId: string]: number };
 };
-// ▲▲▲ FIN ▲▲▲
+
+// ▼▼▼ TIPO AÑADIDO PARA EL ESTADO DEL BOTÓN ▼▼▼
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export default function DashboardArbitro() {
   const [date, setDate] = useState<string>(todayYMD());
@@ -56,15 +55,20 @@ export default function DashboardArbitro() {
   const [allPlayersMap, setAllPlayersMap] = useState<Map<string, Player>>(
     new Map()
   );
-
-  // Estados de Modales
   const [showCardModal, setShowCardModal] = useState(false);
-  const [showGolesModal, setShowGolesModal] = useState(false); // <-- NUEVO ESTADO
+  const [showGolesModal, setShowGolesModal] = useState(false);
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
   const [edits, setEdits] = useState<Record<string, EditRow>>({});
 
-  // Carga mapa id->nombre de equipos
+  // ▼▼▼ ESTADOS AÑADIDOS PARA FEEDBACK ▼▼▼
+  // Almacena el estado de guardado por ID de partido
+  const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>({});
+  // Almacena el mensaje de error global
+  const [globalError, setGlobalError] = useState<string>("");
+  // ▲▲▲ FIN ▲▲▲
+
+  // ... (useEffect para cargar teamsMap y allPlayersMap no cambian) ...
   useEffect(() => {
     (async () => {
       const snap = await getDocs(collection(db, "teams"));
@@ -73,20 +77,19 @@ export default function DashboardArbitro() {
       setTeamsMap(m);
     })();
   }, []);
-
-  // Carga mapa id->Player de TODOS los jugadores
   useEffect(() => {
     (async () => {
       const snap = await getDocs(collection(db, "players"));
       const m = new Map<string, Player>();
       snap.docs.forEach((d) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         m.set(d.id, { id: d.id, ...(d.data() as any) } as Player);
       });
       setAllPlayersMap(m);
     })();
   }, []);
 
-  // Suscripción en tiempo real por fuerza/fecha
+  // Suscripción en tiempo real (lógica de 'edits' actualizada)
   useEffect(() => {
     const unsubscribers: (() => void)[] = [];
     FUERZAS.forEach((fuerza) => {
@@ -96,6 +99,7 @@ export default function DashboardArbitro() {
           const next = { ...prev };
           arr.forEach((m) => {
             if (!next[m.id]) {
+              // Solo inicializar si es un partido nuevo
               const initialCardEdits: { [playerId: string]: CardEditState } =
                 {};
               if (m.yellowCardCount) {
@@ -119,7 +123,6 @@ export default function DashboardArbitro() {
                   };
                 }
               }
-
               next[m.id] = {
                 homeScore: m.homeScore != null ? String(m.homeScore) : "",
                 awayScore: m.awayScore != null ? String(m.awayScore) : "",
@@ -130,9 +133,7 @@ export default function DashboardArbitro() {
                   : "none",
                 defaultWin: "3",
                 cardEdits: initialCardEdits,
-                // ▼▼▼ LÓGICA AÑADIDA ▼▼▼
-                scorerEdits: m.scorers ?? {}, // Cargar goles guardados
-                // ▲▲▲ FIN ▲▲▲
+                scorerEdits: m.scorers ?? {},
               };
             }
           });
@@ -141,7 +142,6 @@ export default function DashboardArbitro() {
       });
       unsubscribers.push(unsub);
     });
-
     return () => unsubscribers.forEach((unsub) => unsub());
   }, [date]);
 
@@ -154,7 +154,7 @@ export default function DashboardArbitro() {
     }));
   }
 
-  // --- Funciones de Modales (NUEVAS Y ACTUALIZADAS) ---
+  // Funciones de Modales
   const openCardModal = (match: Match) => {
     setCurrentMatch(match);
     setShowCardModal(true);
@@ -163,23 +163,25 @@ export default function DashboardArbitro() {
     setCurrentMatch(null);
     setShowCardModal(false);
   };
-
   const openGolesModal = (match: Match) => {
-    // <-- NUEVA FUNCIÓN
     setCurrentMatch(match);
     setShowGolesModal(true);
   };
   const closeGolesModal = () => {
-    // <-- NUEVA FUNCIÓN
     setCurrentMatch(null);
     setShowGolesModal(false);
   };
-  // --- FIN ---
 
-  // --- Función de Guardado Actualizada ---
+  // --- Función de Guardado SÚPER ACTUALIZADA ---
   async function save(match: Match) {
     const e = edits[match.id];
     if (!e) return;
+
+    const matchId = match.id;
+
+    // 1. Poner estado de "Guardando"
+    setGlobalError(""); // Limpiar error global
+    setSaveStatus((prev) => ({ ...prev, [matchId]: "saving" }));
 
     // Lógica de score y WO
     let home = parseInt(e.homeScore || "0", 10);
@@ -196,7 +198,12 @@ export default function DashboardArbitro() {
       away = 0;
     }
     if (home < 0 || away < 0 || Number.isNaN(home) || Number.isNaN(away)) {
-      alert("Los goles deben ser números ≥ 0.");
+      setGlobalError("Los goles deben ser números ≥ 0.");
+      setSaveStatus((prev) => ({ ...prev, [matchId]: "error" }));
+      setTimeout(
+        () => setSaveStatus((prev) => ({ ...prev, [matchId]: "idle" })),
+        2000
+      );
       return;
     }
 
@@ -214,24 +221,27 @@ export default function DashboardArbitro() {
         redCardReason[playerId] = "Doble Amarilla";
     }
 
-    // ▼▼▼ NUEVA LÓGICA DE GOLES (CON VALIDACIÓN) ▼▼▼
+    // Lógica de Goles (con validación)
     const scorers = e.scorerEdits ?? {};
     let totalGoalsAssigned = 0;
     Object.values(scorers).forEach((goals) => {
       totalGoalsAssigned += goals;
     });
-
     const totalGoalsInScore = home + away;
     if (totalGoalsAssigned !== totalGoalsInScore && e.noShow === "none") {
-      alert(
+      setGlobalError(
         `Error: El marcador es ${home}-${away} (Total: ${totalGoalsInScore}), pero asignaste ${totalGoalsAssigned} goles. Los totales deben coincidir.`
       );
-      return; // Detener el guardado
+      setSaveStatus((prev) => ({ ...prev, [matchId]: "error" }));
+      setTimeout(
+        () => setSaveStatus((prev) => ({ ...prev, [matchId]: "idle" })),
+        2000
+      );
+      return;
     }
-    // ▲▲▲ FIN ▲▲▲
 
     try {
-      // 1. Guardar el marcador, tarjetas y GOLES
+      // 2. Guardar en Firestore
       await updateMatchScore(match.id, {
         homeScore: home,
         awayScore: away,
@@ -239,10 +249,10 @@ export default function DashboardArbitro() {
         woTeamId,
         yellowCardCount: yellowCardCount,
         redCardReason: redCardReason,
-        scorers: scorers, // <-- AÑADIDO
+        scorers: scorers,
       });
 
-      // 2. Crear sanciones (sin cambios)
+      // 3. Crear sanciones
       const redCardPlayerIds = Object.keys(redCardReason);
       for (const playerId of redCardPlayerIds) {
         const player = allPlayersMap.get(playerId);
@@ -256,16 +266,33 @@ export default function DashboardArbitro() {
           }
         }
       }
+
+      // 4. ÉXITO: Poner estado "Guardado"
+      setSaveStatus((prev) => ({ ...prev, [matchId]: "saved" }));
     } catch (err) {
       console.error(err);
-      alert("No se pudo guardar el marcador o las sanciones.");
+      setGlobalError(
+        "No se pudo guardar el marcador. Revisa las reglas de seguridad o la conexión."
+      );
+      // 5. ERROR: Poner estado "Error"
+      setSaveStatus((prev) => ({ ...prev, [matchId]: "error" }));
+    } finally {
+      // 6. Resetear el botón después de 2 segundos (sea éxito o error)
+      setTimeout(() => {
+        setSaveStatus((prev) => ({ ...prev, [matchId]: "idle" }));
+      }, 2000);
     }
   }
+  // --- FIN DE FUNCIÓN DE GUARDADO ---
 
-  // --- JSX ---
   return (
     <div className="container py-4">
       <h2 className="mb-3">Panel del Árbitro</h2>
+
+      {/* ▼▼▼ ALERTA GLOBAL DE ERRORES ▼▼▼ */}
+      {globalError && <Alert variant="danger">{globalError}</Alert>}
+      {/* ▲▲▲ FIN ▲▲▲ */}
+
       <div className="row g-3 align-items-end mb-3">
         <div className="col-auto">
           <label className="form-label">Fecha</label>
@@ -299,7 +326,6 @@ export default function DashboardArbitro() {
                       <th className="text-center">Goles</th>
                       <th>W.O.</th>
                       <th>Goles</th>
-                      {/* <-- NUEVA COLUMNA */}
                       <th>Tarjetas</th>
                       <th>Guardar</th>
                       <th>Estatus</th>
@@ -328,7 +354,6 @@ export default function DashboardArbitro() {
                             totalReds += 1;
                         });
                       }
-                      // Contar goles asignados
                       let totalGoals = 0;
                       if (ed.scorerEdits) {
                         totalGoals = Object.values(ed.scorerEdits).reduce(
@@ -336,6 +361,23 @@ export default function DashboardArbitro() {
                           0
                         );
                       }
+
+                      // ▼▼▼ LÓGICA DEL ESTADO DEL BOTÓN ▼▼▼
+                      const status = saveStatus[m.id] || "idle";
+                      const getButtonClass = () => {
+                        if (status === "saving")
+                          return "btn btn-secondary btn-sm";
+                        if (status === "saved") return "btn btn-success btn-sm";
+                        if (status === "error") return "btn btn-danger btn-sm";
+                        return "btn btn-success btn-sm"; // idle
+                      };
+                      const getButtonText = () => {
+                        if (status === "saving") return "Guardando...";
+                        if (status === "saved") return "¡Guardado! ✓";
+                        if (status === "error") return "Error ❌";
+                        return "Guardar";
+                      };
+                      // ▲▲▲ FIN ▲▲▲
 
                       return (
                         <tr key={m.id}>
@@ -400,18 +442,16 @@ export default function DashboardArbitro() {
                               />
                             </div>
                           </td>
-                          {/* ▼▼▼ NUEVO BOTÓN DE GOLES ▼▼▼ */}
                           <td>
                             <Button
                               variant="outline-primary"
                               size="sm"
                               onClick={() => openGolesModal(m)}
-                              disabled={ed.noShow !== "none"} // Deshabilitar si fue W.O.
+                              disabled={ed.noShow !== "none"}
                             >
                               Goles ({totalGoals})
                             </Button>
                           </td>
-                          {/* ▲▲▲ FIN ▲▲▲ */}
                           <td>
                             <Button
                               variant="outline-warning"
@@ -429,12 +469,17 @@ export default function DashboardArbitro() {
                             </Button>
                           </td>
                           <td>
+                            {/* ▼▼▼ BOTÓN DE GUARDAR ACTUALIZADO ▼▼▼ */}
                             <button
-                              className="btn btn-success btn-sm"
+                              className={getButtonClass()}
                               onClick={() => save(m)}
+                              disabled={
+                                status === "saving" || status === "saved"
+                              }
                             >
-                              Guardar
+                              {getButtonText()}
                             </button>
+                            {/* ▲▲▲ FIN ▲▲▲ */}
                           </td>
                           <td>
                             {finished && typeof m.homeScore === "number"
@@ -464,7 +509,7 @@ export default function DashboardArbitro() {
         />
       )}
 
-      {/* ▼▼▼ NUEVO MODAL PARA GOLES ▼▼▼ */}
+      {/* Modal para Goles (sin cambios) */}
       {currentMatch && (
         <GolesModal
           show={showGolesModal}
@@ -475,12 +520,11 @@ export default function DashboardArbitro() {
           onEdit={(patch) => setEdit(currentMatch.id, patch)}
         />
       )}
-      {/* ▲▲▲ FIN ▲▲▲ */}
     </div>
   );
 }
 
-// --- Componente del Modal de Tarjetas (sin cambios) ---
+// ... (El componente TarjetasModal no cambia) ...
 interface TarjetasModalProps {
   show: boolean;
   onHide: () => void;
@@ -649,7 +693,7 @@ function TarjetasModal({
   );
 }
 
-// ▼▼▼ NUEVO COMPONENTE: GolesModal ▼▼▼
+// ... (El componente GolesModal no cambia) ...
 interface GolesModalProps {
   show: boolean;
   onHide: () => void;
@@ -658,7 +702,6 @@ interface GolesModalProps {
   editData: EditRow;
   onEdit: (patch: Partial<EditRow>) => void;
 }
-
 function GolesModal({
   show,
   onHide,
@@ -675,7 +718,6 @@ function GolesModal({
       (p) => p.teamId === match.awayTeamId
     ),
   ];
-
   const teamsMap = new Map();
   teamsMap.set(
     match.homeTeamId,
@@ -686,23 +728,19 @@ function GolesModal({
     allPlayersMap.get(awayPlayers[0]?.id)?.teamName ?? "Visitante"
   );
 
-  // Función para manejar el cambio en el input de goles
   const handleGoalChange = (playerId: string, goals: string) => {
-    const newCount = Math.max(0, parseInt(goals, 10) || 0); // Asegura que sea un número >= 0
-
+    const newCount = Math.max(0, parseInt(goals, 10) || 0);
     const newScorerEdits = { ...editData.scorerEdits };
     if (newCount === 0) {
-      delete newScorerEdits[playerId]; // Limpiar si los goles son 0
+      delete newScorerEdits[playerId];
     } else {
       newScorerEdits[playerId] = newCount;
     }
-
     onEdit({ scorerEdits: newScorerEdits });
   };
 
   const renderPlayerRow = (player: Player) => {
     const goalCount = editData.scorerEdits[player.id] || 0;
-
     return (
       <tr key={player.id}>
         <td>{player.nombre}</td>
@@ -711,7 +749,7 @@ function GolesModal({
             type="number"
             size="sm"
             min={0}
-            value={goalCount === 0 ? "" : goalCount} // Mostrar vacío si es 0
+            value={goalCount === 0 ? "" : goalCount}
             placeholder="0"
             onChange={(e) => handleGoalChange(player.id, e.target.value)}
           />
@@ -720,7 +758,6 @@ function GolesModal({
     );
   };
 
-  // Calcular totales para validar
   const homeGoals = parseInt(editData.homeScore, 10) || 0;
   const awayGoals = parseInt(editData.awayScore, 10) || 0;
   const totalGoals = homeGoals + awayGoals;
@@ -756,9 +793,7 @@ function GolesModal({
               </span>
             )}
           </div>
-
           <div className="row">
-            {/* Columna Equipo Local */}
             <div className="col-md-6">
               <h5>{teamsMap.get(match.homeTeamId)} (Local)</h5>
               <Table responsive hover variant="dark" size="sm" className="mt-2">
@@ -781,8 +816,6 @@ function GolesModal({
                 </tbody>
               </Table>
             </div>
-
-            {/* Columna Equipo Visitante */}
             <div className="col-md-6 border-start">
               <h5>{teamsMap.get(match.awayTeamId)} (Visitante)</h5>
               <Table responsive hover variant="dark" size="sm" className="mt-2">
@@ -816,4 +849,3 @@ function GolesModal({
     </Modal>
   );
 }
-// ▲▲▲ FIN ▲▲▲

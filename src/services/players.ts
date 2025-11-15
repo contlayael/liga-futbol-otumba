@@ -13,6 +13,7 @@ import {
   query,
   where,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import { db, storage } from "./firebaseConfig";
 import type { Fuerza } from "./teams";
@@ -125,6 +126,7 @@ export async function deletePlayer(player: Player): Promise<void> {
   try {
     const photoRef = ref(storage, player.storagePath);
     await deleteObject(photoRef);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error.code !== "storage/object-not-found") {
       console.warn("No se pudo borrar la foto (quizás ya estaba borrada):", error);
@@ -132,3 +134,17 @@ export async function deletePlayer(player: Player): Promise<void> {
   }
   await deleteDoc(doc(db, "players", player.id));
 }
+
+/**
+ * Obtiene un solo jugador por su ID de documento.
+ * @param playerId El ID del documento del jugador.
+ */
+export async function getPlayerById(playerId: string): Promise<Player | null> {
+  const docRef = doc(db, "players", playerId);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) {
+    return null;
+  }
+  return { id: snap.id, ...(snap.data() as NewPlayer) } as Player;
+}
+// ▲▲▲ FIN DE LA NUEVA FUNCIÓN ▲▲▲
